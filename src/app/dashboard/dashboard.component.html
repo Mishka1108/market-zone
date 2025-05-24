@@ -1,0 +1,162 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <h1>პროფილის გვერდი</h1>
+  </header>
+  <div class="card-header">
+    <h2>მომხმარებლის ინფორმაცია</h2>
+  </div>
+</div>
+
+<div class="profile">
+
+<!-- პირველი კომპონენტი -->
+   <div class="profile-information" >
+    <div class="image-upload-container">
+      <input 
+        type="file" 
+        id="profileImageInput" 
+        accept="image/*" 
+
+        (change)="onFileSelected($event, 'profile')"
+      />
+    
+      <img 
+        [src]="currentUser?.profileImage || 'https://i.ibb.co/GvshXkLK/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg'" 
+        id="profileImagePreview" 
+        class="profileimg" 
+        alt="Profile Image"
+        (click)="triggerFileInput()"  
+             
+      />
+      <button class="btn" mat-flat-button (click)="logout()">გასვლა</button>
+
+    </div>
+    <div class="user-info" *ngIf="currentUser">
+      <div class="username">
+      <span class="name">{{currentUser.name}}</span>
+      <span class="name">{{currentUser.secondName}}</span>
+      </div>
+      <div>
+    <p>ტელეფონი: {{currentUser.phone}}</p>
+    <p>ელფოსტა: {{currentUser.email}}</p>
+    <p>პირადი ნომერი: {{currentUser.personalNumber}}</p>
+  </div>
+  <div class="user-actions">
+    <span class="pro">პროდუქტის რაოდენობა:</span>
+    <span class="num">{{userProducts.length}} / {{MAX_PRODUCTS_ALLOWED}}</span>
+    <!-- დამატებული რჩეული პროდუქტების მაჩვენებელი -->
+    <p *ngIf="!canAddMoreProducts()" class="limit-warning">
+      მიღწეულია პროდუქტების მაქსიმალური რაოდენობა!
+    </p>
+    <p *ngIf="canAddMoreProducts()" class="remaining-products">
+      დარჩენილია {{getRemainingProductsCount()}} პროდუქტის დამატება
+    </p>
+  </div>
+  <div class="btndiv">
+    <!-- პროდუქტის დამატების ღილაკის გაუქმების ლოგიკა -->
+    <button mat-flat-button class="btn" (click)="toggleProductForm()" [disabled]="!canAddMoreProducts() && !productFormVisible">
+      {{ productFormVisible ? 'დახურვა' : 'პროდუქტი დამატება' }}
+    </button>
+    <button class="btn" mat-flat-button routerLink="/product"  > ჩემი პროდუქტები </button>
+  </div>
+ </div>
+      
+ 
+
+
+   <!-- მეორე კომპონენტი -->
+
+   
+
+
+</div>
+
+<div class="conteiner">
+  <div class="card3" *ngIf="productFormVisible">
+    <h2>შეიყვანეთ პროდუქტის ინფორმაცია</h2>
+    
+    <form [formGroup]="productForm" class="card3" (ngSubmit)="addProduct()">
+      <mat-form-field class="example-full-width">
+        <mat-label>პროდუქტის სახელი</mat-label>
+        <input matInput formControlName="title">
+        <mat-error *ngIf="productForm.controls.title.hasError('required')">
+          სახელი აუცილებელია
+        </mat-error>
+      </mat-form-field>
+      
+      <mat-form-field class="example-full-width">
+        <mat-label>პროდუქტის კატეგორია</mat-label>
+        <input type="text" matInput formControlName="category" [matAutocomplete]="auto">
+        <mat-autocomplete #auto="matAutocomplete">
+          <mat-option *ngFor="let category of filteredCategories" [value]="category">
+            {{ category }}
+          </mat-option>
+        </mat-autocomplete>
+        <mat-error *ngIf="productForm.controls.category.hasError('required')">
+          კატეგორია აუცილებელია
+        </mat-error>
+      </mat-form-field>
+      
+      <mat-form-field class="example-full-width">
+        <mat-label>გამოშვების წელი</mat-label>
+        <input matInput type="number" formControlName="year">
+        <mat-error *ngIf="productForm.controls.year.hasError('required')">
+          წელი აუცილებელია
+        </mat-error>
+        <mat-error *ngIf="productForm.controls.year.hasError('min') || productForm.controls.year.hasError('max')">
+          მიუთითეთ სწორი წელი (2000-დან დღემდე)
+        </mat-error>
+      </mat-form-field>
+      
+      <mat-form-field class="example-full-width">
+        <mat-label>ფასი</mat-label>
+        <input matInput type="number" formControlName="price">
+        <mat-error *ngIf="productForm.controls.price.hasError('required')">
+          ფასი აუცილებელია
+        </mat-error>
+        <mat-error *ngIf="productForm.controls.price.hasError('min')">
+          ფასი უნდა იყოს დადებითი რიცხვი
+        </mat-error>
+      </mat-form-field>
+      
+      <!-- დამატებული მდებარეობის ველი -->
+      <mat-form-field class="example-full-width">
+        <mat-label>მდებარეობა</mat-label>
+        <input matInput formControlName="location">
+        <mat-error *ngIf="productForm.controls.location.hasError('required')">
+          მდებარეობა აუცილებელია
+        </mat-error>
+      </mat-form-field>
+      
+      <mat-form-field class="example-full-width">
+        <mat-label>პროდუცტის აღწერა</mat-label>
+        <textarea matInput formControlName="description" rows="3"></textarea>
+        <mat-error *ngIf="productForm.controls.description.hasError('required')">
+          აღწერა აუცილებელია
+        </mat-error>
+      </mat-form-field>
+  
+      <div class="imageupload">
+        <label for="productImageInput">პროდუქტის ფოტო</label>
+        <input 
+          type="file" 
+          id="productImageInput" 
+          accept="image/*" 
+          style="display: none;" 
+          (change)="onFileSelected($event, 'product')"
+        />
+        <button type="button" mat-raised-button (click)="triggerProductImageInput()" class="upload-btn">
+          აირჩიეთ ფოტო
+        </button>
+        <div *ngIf="productImagePreview" class="image-preview-container">
+          <img [src]="productImagePreview" alt="პროდუქტის სურათი" style="width: 150px; height: 150px;" class="image-preview">
+        </div>
+      </div>
+     
+      <button type="submit" mat-raised-button [disabled]="productForm.invalid || !productImage || isUploading">
+        {{ isUploading ? 'იტვირთება...' : 'დამატება' }}
+      </button>
+    </form>
+  </div>
+
+</div>

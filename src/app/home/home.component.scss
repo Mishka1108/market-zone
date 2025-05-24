@@ -1,0 +1,377 @@
+.home{
+    background-color: #f1f2f6;
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    align-items: center;
+    height: 380px;
+    flex-wrap: inherit;
+    .market{
+        display: flex;
+        flex-direction: column;
+        .buysel{
+            font-size: 30px;
+            font-weight: bold;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            margin-bottom: 20px;
+        }
+        .mart{
+            font-size: 30px;
+            color: #f79aa4;
+        }
+        .text{
+            width: 550px;
+        }
+        .start{
+            display: flex;
+            gap: 20px;
+        }
+      
+    }
+
+    .circle{
+        width: 350px;
+        height: 350px;
+        background-color: white;
+        border-radius: 100%;
+        position: relative;
+        overflow: hidden;
+        animation: float 4s ease-in-out infinite;
+        .circle1{
+            width: 110px;
+            height: 110px;
+            background-color: #e1e5f0;
+            border-radius: 20px;
+            position: absolute;
+            top: 65px;
+            left: 50px;
+            animation: pulse 3s ease-in-out infinite;
+            animation-delay: 0s;
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 20px;
+                width: 100%;
+                height: 100%;
+                object-fit: contain; // სურათი დაიჭერს მის ხელმისაწვდომ სივრცეს სწორად, background-ის გარეშე
+                object-position: center;
+                background: transparent;
+              }
+
+        }
+        .circle2{
+            width: 110px;
+            height: 110px;
+            background-color: #ffd167;
+            border-radius: 20px;
+            position: absolute;
+            top: 65px;
+            right: 50px;
+            animation: pulse 4s ease-in-out infinite;
+            animation-delay: 0.8s;
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 20px;
+                width: 100%;
+                height: 100%;
+                object-fit: contain; // სურათი დაიჭერს მის ხელმისაწვდომ სივრცეს სწორად, background-ის გარეშე
+                object-position: center;
+                background: transparent;
+              }
+           
+        }
+        .circle3{
+            width: 110px;
+            height: 110px;
+            background-color: #4ecdc4;
+            border-radius: 20px;
+            position: absolute;
+            top: 205px;
+            left: 120px;
+            animation: pulse 4s ease-in-out infinite;
+            animation-delay: 1s;
+            img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                border-radius: 20px;
+                width: 100%;
+                height: 100%;
+                object-fit: contain; // სურათი დაიჭერს მის ხელმისაწვდომ სივრცეს სწორად, background-ის გარეშე
+                object-position: center;
+                background: transparent;
+              }
+        }
+
+    }
+}
+
+.categorymain {
+  padding: 1rem;
+
+  h1 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+  }
+
+  .category-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+  }
+
+  .category {
+    background-color: #f1f1f1;
+    border-radius: 12px;
+    padding: 1rem;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s, transform 0.2s;
+
+    mat-icon {
+      font-size: 36px;
+      margin-bottom: 0.5rem;
+      color: #333;
+    }
+
+    p {
+      margin: 0;
+      font-weight: bold;
+      color: #444;
+    }
+
+    &:hover {
+      background-color: #e0e0e0;
+      transform: translateY(-2px);
+    }
+  }
+}
+
+.sell{
+  display: flex;
+  width: 830px;
+  background-color : rgb(248, 37, 37);
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  border-radius: 10px 10px 10px 10px;
+  .sell-text{
+   display: flex;
+   flex-direction: column;
+   gap: 20px;
+   border-radius: 10px;
+   .sell-free{
+    font-size: 30px;
+   }
+   span{
+    color: white;
+   }
+   .btnsing{
+    width: 200px !important;
+    margin: auto;
+   }
+  }
+  .sell-img{
+   background-color:  #e1e5f0;
+   img{
+    width: 200px;
+    height: 200px;
+   }
+  }
+
+}
+
+
+@keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  .whyus{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 20px;
+    align-items: center;
+    margin: 100px 0;
+    .why{
+      font-size: 30px;
+    }
+    .free{
+      margin-right: 208px;
+    }
+    span{
+      font-size: 20px;
+      color: #f79aa4;
+    }
+  }
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.2);
+    }
+  }
+  
+ @media screen and (max-width:320px) {
+ 
+  .home{
+    width: 100% ;
+    flex-direction: column;
+    height: auto;
+    padding-bottom: 30px;
+    .market{
+      width: 98% !important;
+      .buysel, .mart, .text{
+        margin-left: 10px !important;
+      }
+      .text{
+        width: 100%;
+      }
+    }
+    .circle{
+      top: 25px;
+      width: 200px;
+      height: 200px;
+      .circle1, .circle2,.circle3{
+        width: 70px !important;
+        height: 70px !important;
+      }
+      .circle1{
+        left: 25px;
+        top: 30px;
+      }
+      .circle2{
+        right: 25px !important;
+        top: 30px;
+      }
+      .circle3 {
+        position: absolute !important;
+        top: 120px;
+        left: 70px !important;
+        width: 70px !important;
+        height: 70px !important;
+      }
+    }
+  }
+  .sell{
+    flex-direction: column;
+    width: 99%;
+    .sell-img{
+      width: 100%;
+      background-color: #e1e5f0;
+    }
+  }
+  .whyus{
+    width: 100% !important;
+  }
+ }
+
+ @media screen and (min-width:321px) and (max-width:480px){
+  .home{
+    height: 600px;
+     width: 100%;
+     flex-direction: column;
+     justify-content: center;
+     align-items: center;
+     .market{
+      width: 100%;
+      align-items: center;
+      .text{
+        width: 100%;
+       text-align: center;
+      }
+
+     }
+     .circle{
+      top: 25px;
+      width: 250px;
+      height: 250px;
+      .circle1, .circle2,.circle3{
+        width: 90px !important;
+        height: 90px !important;
+      }
+      .circle1{
+        position: absolute !important;
+        left: 30px !important;
+        top: 40px !important;
+      }
+      .circle2{
+        right: 25px !important;
+        top: 40px;
+      }
+      .circle3 {
+        position: absolute !important;
+        top: 150px !important;
+        left: 85px !important;
+        width: 90px !important;
+        height: 90px !important;
+      }
+    }
+
+  }
+  .sell{
+    
+    width: 100%;
+    flex-direction: column;
+    .sell-img{
+      height: auto;
+      width: 100%;
+     
+     .hmn{
+      height: 300px;
+      margin: auto;
+     }
+    }
+  }
+ }
+ @media screen and (min-width:481px) and (max-width:922px){
+   .home{
+    flex-direction: column;
+    height: auto;
+    .market{
+      align-items: center;
+
+    }
+    .circle{
+     margin-top: 30px !important;
+    }
+
+   }
+
+   .sell{
+    flex-direction: column;
+    width: 100%;
+    .sell-text{
+    
+      height: 300px;
+    }
+    .sell-img{
+      width: 100%;
+    }
+   }
+ }
+ @media screen and (min-width:420px) and (max-width:574px){
+   .home{
+    .market{
+      justify-content: center;
+      .text{
+        width: 100%;
+        text-align: center;
+      }
+    }
+   }
+ }
