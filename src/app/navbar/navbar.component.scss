@@ -14,6 +14,9 @@
     .navmenu{
         display: flex;
         align-items: center;
+        .navIcon{
+            display: none;
+        }
     }
     .logo{
         width: 90px;
@@ -45,7 +48,7 @@
 }
 
 
-@media screen and (max-width:950px) {
+@media screen and (max-width:850px) {
     .nav{
         display: block;
         height: auto;
@@ -54,6 +57,12 @@
         .navmenu{
             gap: 10px !important;
             margin-left: 20px !important;
+            .navIcon{
+                display: block;
+                width: 30px;
+                height: 30px;
+                cursor: pointer;
+            }
         }
         .components{
             display: none;

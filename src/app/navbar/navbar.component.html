@@ -1,6 +1,6 @@
 <div class="nav">
   <div class="navmenu">
-  <mat-icon (click)="toggleMenu()">{{ isShow ? 'close' : 'menu' }}</mat-icon>
+  <mat-icon (click)="toggleMenu()" class="navIcon" >{{ isShow ? 'close' : 'menu' }}</mat-icon>
   <a routerLink="/home">
     <img 
       src="https://i.ibb.co/cKcj2YDy/android-chrome-192x192-removebg-preview.png" 
@@ -9,10 +9,10 @@
   </a>
   
   </div>
-    <div class="components" [ngClass]="{'show-menu': isShow}" [ngClass]="{'show-menu':isShow}"> 
-      <button mat-raised-button class="btn" routerLinkActive="active"  routerLink="home">Home</button>
-      <button mat-raised-button class="btn" routerLink="public-products">Product</button>
-      <button mat-raised-button class="btn" routerLink="contact">Contact</button>
+    <div class="components"  [ngClass]="{'show-menu':isShow}"> 
+      <button mat-raised-button class="btn" routerLinkActive="active" (click)="closeMenu()"  routerLink="home">Home</button>
+      <button mat-raised-button class="btn" (click)="closeMenu()" routerLink="public-products">Product</button>
+      <button mat-raised-button class="btn" (click)="closeMenu()" routerLink="contact">Contact</button>
     </div>
 
     <img [src]="profileImageUrl" class="profileimg" (click)="onProfileImageClick()" alt="">

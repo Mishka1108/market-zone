@@ -51,7 +51,7 @@ export const routes: Routes = [
       }
     ]
   },
-  { path: '', redirectTo: '/public-products', pathMatch: 'full' }, // საწყისი გვერდი შევცვალეთ
+  { path: '', component: HomeComponent }, // საწყისი გვერდი შევცვალეთ
   { path: 'home', component: HomeComponent },
   { path: 'product', component: ProductComponent, canActivate: [() => authGuard()] },
   { path: 'contact', component: ContactComponent },

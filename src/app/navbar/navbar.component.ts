@@ -36,6 +36,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
   toggleMenu(){
     this.isShow = !this.isShow
   }
+  closeMenu() {
+  this.isShow = false;
+}
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe();
