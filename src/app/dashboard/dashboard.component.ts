@@ -137,10 +137,22 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/auth/login']);
   }
 
-  // პროფილის სურათის ატვირთვა
+  // პროფილის სურათის ატვირთვა - გაუმჯობესებული მეთოდი
   triggerFileInput(): void {
-    const fileInput = document.getElementById('profileImageInput') as HTMLInputElement;
-    fileInput.click();
+    try {
+      const fileInput = document.getElementById('profileImageInput') as HTMLInputElement;
+      if (fileInput) {
+        // მობილურ მოწყობილობებზე უკეთესი მუშაობისთვის
+        fileInput.value = ''; // წინანდელი არჩევანის გასუფთავება
+        setTimeout(() => {
+          fileInput.click();
+        }, 100);
+      } else {
+        console.error('Profile image input not found');
+      }
+    } catch (error) {
+      console.error('Error triggering file input:', error);
+    }
   }
 
   // პროდუქტის ფორმის ჩვენება
@@ -157,62 +169,116 @@ export class DashboardComponent implements OnInit {
     }
   }
   
-  // პროდუქტის სურათის ატვირთვა
+  // პროდუქტის სურათის ატვირთვა - გაუმჯობესებული მეთოდი
   triggerProductImageInput(): void {
-    const fileInput = document.getElementById('productImageInput') as HTMLInputElement;
-    fileInput.click();
+    try {
+      const fileInput = document.getElementById('productImageInput') as HTMLInputElement;
+      if (fileInput) {
+        // მობილურ მოწყობილობებზე უკეთესი მუშაობისთვის
+        fileInput.value = ''; // წინანდელი არჩევანის გასუფთავება
+        setTimeout(() => {
+          fileInput.click();
+        }, 100);
+      } else {
+        console.error('Product image input not found');
+      }
+    } catch (error) {
+      console.error('Error triggering product image input:', error);
+    }
   }
 
-  // ფაილის არჩევისას
+  // ფაილის არჩევისას - გაუმჯობესებული მეთოდი
   onFileSelected(event: Event, type: 'profile' | 'product'): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
+    try {
+      const input = event.target as HTMLInputElement;
+      
+      // შემოწმება რომ input არსებობს და files-ი არ არის null
+      if (!input || !input.files || input.files.length === 0) {
+        console.warn('No file selected or input is invalid');
+        return;
+      }
+      
       const file = input.files[0];
       
-      if (type === 'profile') {
-        this.isUploading = true;
-        
-        // პრევიუს სურათის ჩვენება
-        const reader = new FileReader();
-        reader.onload = (e: ProgressEvent<FileReader>) => {
-          const previewElement = document.getElementById('profileImagePreview') as HTMLImageElement;
-          if (previewElement && e.target?.result) {
-            previewElement.src = e.target.result as string;
-          }
-        };
-        reader.readAsDataURL(file);
-        
-        // პროფილის სურათის განახლება
-        this.authService.updateProfileImage(file)
-          .pipe(finalize(() => this.isUploading = false))
-          .subscribe({
-            next: (response) => {
-              this.showSnackBar('პროფილის სურათი განახლდა');
-            },
-            error: (error) => {
-              console.error('პროფილის სურათის განახლების შეცდომა', error);
-              this.showSnackBar('პროფილის სურათის განახლება ვერ მოხერხდა');
-              // შეცდომის შემთხვევაში დაბრუნება საწყის სურათზე
-              if (this.currentUser?.profileImage) {
-                const previewElement = document.getElementById('profileImagePreview') as HTMLImageElement;
-                if (previewElement) {
-                  previewElement.src = this.currentUser.profileImage;
-                }
-              }
-            }
-          });
-      } else if (type === 'product') {
-        // პროდუქტის სურათი
-        this.productImage = file;
-        
-        // პრევიუს სურათის ჩვენება
-        const reader = new FileReader();
-        reader.onload = (e: ProgressEvent<FileReader>) => {
-          this.productImagePreview = e.target?.result as string;
-        };
-        reader.readAsDataURL(file);
+      // ფაილის ტიპის შემოწმება
+      if (!file.type.startsWith('image/')) {
+        this.showSnackBar('გთხოვთ აირჩიოთ მხოლოდ სურათი');
+        return;
       }
+      
+      // ფაილის ზომის შემოწმება (5MB მაქსიმუმ)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        this.showSnackBar('სურათის ზომა არ უნდა აღემატებოდეს 5MB-ს');
+        return;
+      }
+      
+      if (type === 'profile') {
+        this.handleProfileImageSelection(file);
+      } else if (type === 'product') {
+        this.handleProductImageSelection(file);
+      }
+    } catch (error) {
+      console.error('Error in file selection:', error);
+      this.showSnackBar('სურათის არჩევისას დაფიქსირდა შეცდომა');
     }
+  }
+  
+  // პროფილის სურათის დამუშავება
+  private handleProfileImageSelection(file: File): void {
+    this.isUploading = true;
+    
+    // პრევიუს სურათის ჩვენება
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      const previewElement = document.getElementById('profileImagePreview') as HTMLImageElement;
+      if (previewElement && e.target?.result) {
+        previewElement.src = e.target.result as string;
+      }
+    };
+    reader.onerror = () => {
+      console.error('Error reading file for preview');
+      this.showSnackBar('სურათის წაკითხვისას დაფიქსირდა შეცდომა');
+    };
+    reader.readAsDataURL(file);
+    
+    // პროფილის სურათის განახლება
+    this.authService.updateProfileImage(file)
+      .pipe(finalize(() => this.isUploading = false))
+      .subscribe({
+        next: (response) => {
+          this.showSnackBar('პროფილის სურათი განახლდა');
+        },
+        error: (error) => {
+          console.error('პროფილის სურათის განახლების შეცდომა', error);
+          this.showSnackBar('პროფილის სურათის განახლება ვერ მოხერხდა');
+          // შეცდომის შემთხვევაში დაბრუნება საწყის სურათზე
+          if (this.currentUser?.profileImage) {
+            const previewElement = document.getElementById('profileImagePreview') as HTMLImageElement;
+            if (previewElement) {
+              previewElement.src = this.currentUser.profileImage;
+            }
+          }
+        }
+      });
+  }
+  
+  // პროდუქტის სურათის დამუშავება
+  private handleProductImageSelection(file: File): void {
+    this.productImage = file;
+    
+    // პრევიუს სურათის ჩვენება
+    const reader = new FileReader();
+    reader.onload = (e: ProgressEvent<FileReader>) => {
+      this.productImagePreview = e.target?.result as string;
+    };
+    reader.onerror = () => {
+      console.error('Error reading product image file for preview');
+      this.showSnackBar('პროდუქტის სურათის წაკითხვისას დაფიქსირდა შეცდომა');
+      this.productImage = null;
+      this.productImagePreview = null;
+    };
+    reader.readAsDataURL(file);
   }
   
   // პროდუქტის დამატება
@@ -301,6 +367,4 @@ export class DashboardComponent implements OnInit {
       verticalPosition: 'bottom'
     });
   }
-  
-  
 }

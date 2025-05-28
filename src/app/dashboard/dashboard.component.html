@@ -12,11 +12,12 @@
 <!-- პირველი კომპონენტი -->
    <div class="profile-information" >
     <div class="image-upload-container">
+      <!-- პროფილის სურათის input - ამოღებულია capture ატრიბუტი -->
       <input 
         type="file" 
         id="profileImageInput" 
         accept="image/*" 
-
+        style="display: none;"
         (change)="onFileSelected($event, 'profile')"
       />
     
@@ -138,6 +139,7 @@
   
       <div class="imageupload">
         <label for="productImageInput">პროდუქტის ფოტო</label>
+        <!-- პროდუქტის სურათის input - ამოღებულია capture ატრიბუტი -->
         <input 
           type="file" 
           id="productImageInput" 
