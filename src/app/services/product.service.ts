@@ -40,7 +40,7 @@ export class ProductService {
     });
   }
 
-  // ყველა პროდუქტის მიღება (საჯაროდ ხელმისაწვდომი)
+  // ყველა პროდუქტის მიღება (საჯაროდ ხელმისაწვდომი) - გაუმჯობესებული
   getAllProducts(filters?: {
     category?: string,
     minPrice?: number,
@@ -64,7 +64,35 @@ export class ProductService {
       }
     }
     
+    // საჯარო მოთხოვნა - არ გამოიყენოს headers
     return this.http.get(`${this.baseUrl}/products`, { params });
+  }
+
+  // ალტერნატიული მეთოდი საჯარო პროდუქტებისთვის
+  getAllPublicProducts(filters?: {
+    category?: string,
+    minPrice?: number,
+    maxPrice?: number,
+    search?: string
+  }): Observable<any> {
+    let params = new HttpParams();
+    
+    if (filters) {
+      Object.keys(filters).forEach(key => {
+        const value = filters[key as keyof typeof filters];
+        if (value !== undefined && value !== null && value !== '') {
+          params = params.append(key, value.toString());
+        }
+      });
+    }
+    
+    // სპეციალური endpoint საჯარო პროდუქტებისთვის (თუ backend-ზე არსებობს)
+    return this.http.get(`${this.baseUrl}/products/public`, { params })
+      .pipe(
+        tap((response: any) => {
+          console.log('საჯარო პროდუქტები ჩაიტვირთა:', response);
+        })
+      );
   }
 
   // კონკრეტული პროდუქტის მიღება ID-ით (საჯაროდ ხელმისაწვდომი)
@@ -129,5 +157,15 @@ export class ProductService {
         }
       })
     );
+  }
+
+  // კატეგორიების მიღება (საჯარო)
+  getCategories(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.baseUrl}/products/categories`);
+  }
+
+  // სტატისტიკის მიღება (საჯარო)
+  getProductStats(): Observable<any> {
+    return this.http.get(`${this.baseUrl}/products/stats`);
   }
 }

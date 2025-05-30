@@ -21,7 +21,8 @@
         <img [src]="product.image" alt="{{ product.title }}" class="product-image">
       </div>
 
-      <div class="product-meta" *ngIf=" currentUser">
+      <!-- პროდუქტის ძირითადი ინფორმაცია - ყოველთვის ჩნდება -->
+      <div class="product-meta">
         <h1 class="product-title">{{ product.title }}</h1>
         <p class="category">კატეგორია: {{ product.category || 'არ არის მითითებული' }}</p>
         <p class="year">გამოშვების წელი: {{ product.year || 'არ არის მითითებული' }}</p>
@@ -29,11 +30,24 @@
         <p class="description">აღწერა: {{ product.description || 'არ არის მითითებული' }}</p>
         <p class="location">ადგილმდებარეობა: {{ product.location || 'არ არის მითითებული' }}</p>
         
-        <div class="seller-info" >
+        <!-- გამყიდველის ინფორმაცია - ყოველთვის ჩნდება -->
+        <div class="seller-info">
           <h2>გამყიდველის ინფორმაცია</h2>
-          <p class="seller">გამყიდველი: {{ product.userName }}</p>
-          <p class="contact">საკონტაქტო მეილი: {{ currentUser.email }}</p>
-          <p class="contact">საკონტაქტო ტელეფონი: {{ currentUser.phone }}</p>
+          <p class="seller">გამყიდველი: {{ product.userName || 'არ არის მითითებული' }}</p>
+          
+          <!-- კონტაქტის ინფორმაცია მხოლოდ ავტორიზებული მომხმარებლისთვის -->
+          <div *ngIf="currentUser; else loginPrompt">
+            <p class="contact">საკონტაქტო მეილი: {{ currentUser.email || 'არ არის მითითებული' }}</p>
+            <p class="contact">საკონტაქტო ტელეფონი: {{ currentUser.phone || 'არ არის მითითებული' }}</p>
+          </div>
+          
+          <!-- თუ მომხმარებელი არ არის შესული -->
+          <ng-template #loginPrompt>
+            <div class="login-prompt">
+              <p><strong>საკონტაქტო ინფორმაციის სანახავად გთხოვთ შეხვიდეთ სისტემაში</strong></p>
+              <button mat-raised-button color="primary" routerLink="/auth/login">შესვლა</button>
+            </div>
+          </ng-template>
         </div>
       </div>
     </div>

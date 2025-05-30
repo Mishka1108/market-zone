@@ -8,17 +8,17 @@
 </div>
 
 <div class="profile">
-
-<!-- პირველი კომპონენტი -->
-   <div class="profile-information" >
+  <!-- პირველი კომპონენტი -->
+  <div class="profile-information">
     <div class="image-upload-container">
-      <!-- პროფილის სურათის input - ამოღებულია capture ატრიბუტი -->
+      <!-- გამოსწორებული პროფილის სურათის input Android Chrome-ისთვის -->
       <input 
         type="file" 
         id="profileImageInput" 
-        accept="image/*" 
-        style="display: none;"
+        accept="image/*,image/jpeg,image/jpg,image/png,image/gif" 
+        style="position: absolute; left: -9999px; opacity: 0;"
         (change)="onFileSelected($event, 'profile')"
+        #profileInput
       />
     
       <img 
@@ -26,50 +26,40 @@
         id="profileImagePreview" 
         class="profileimg" 
         alt="Profile Image"
-        (click)="triggerFileInput()"  
-             
+        (click)="triggerFileInput()"
+        style="cursor: pointer;"
       />
       <button class="btn" mat-flat-button (click)="logout()">გასვლა</button>
-
     </div>
+    
     <div class="user-info" *ngIf="currentUser">
       <div class="username">
-      <span class="name">{{currentUser.name}}</span>
-      <span class="name">{{currentUser.secondName}}</span>
+        <span class="name">{{currentUser.name}}</span>
+        <span class="name">{{currentUser.secondName}}</span>
       </div>
       <div>
-    <p>ტელეფონი: {{currentUser.phone}}</p>
-    <p>ელფოსტა: {{currentUser.email}}</p>
-    <p>პირადი ნომერი: {{currentUser.personalNumber}}</p>
+        <p>ტელეფონი: {{currentUser.phone}}</p>
+        <p>ელფოსტა: {{currentUser.email}}</p>
+        <p>პირადი ნომერი: {{currentUser.personalNumber}}</p>
+      </div>
+      <div class="user-actions">
+        <span class="pro">პროდუქტის რაოდენობა:</span>
+        <span class="num">{{userProducts.length}} / {{MAX_PRODUCTS_ALLOWED}}</span>
+        <p *ngIf="!canAddMoreProducts()" class="limit-warning">
+          მიღწეულია პროდუქტების მაქსიმალური რაოდენობა!
+        </p>
+        <p *ngIf="canAddMoreProducts()" class="remaining-products">
+          დარჩენილია {{getRemainingProductsCount()}} პროდუქტის დამატება
+        </p>
+      </div>
+      <div class="btndiv">
+        <button mat-flat-button class="btn" (click)="toggleProductForm()" [disabled]="!canAddMoreProducts() && !productFormVisible">
+          {{ productFormVisible ? 'დახურვა' : 'პროდუქტი დამატება' }}
+        </button>
+        <button class="btn" mat-flat-button routerLink="/product">ჩემი პროდუქტები</button>
+      </div>
+    </div>
   </div>
-  <div class="user-actions">
-    <span class="pro">პროდუქტის რაოდენობა:</span>
-    <span class="num">{{userProducts.length}} / {{MAX_PRODUCTS_ALLOWED}}</span>
-    <!-- დამატებული რჩეული პროდუქტების მაჩვენებელი -->
-    <p *ngIf="!canAddMoreProducts()" class="limit-warning">
-      მიღწეულია პროდუქტების მაქსიმალური რაოდენობა!
-    </p>
-    <p *ngIf="canAddMoreProducts()" class="remaining-products">
-      დარჩენილია {{getRemainingProductsCount()}} პროდუქტის დამატება
-    </p>
-  </div>
-  <div class="btndiv">
-    <!-- პროდუქტის დამატების ღილაკის გაუქმების ლოგიკა -->
-    <button mat-flat-button class="btn" (click)="toggleProductForm()" [disabled]="!canAddMoreProducts() && !productFormVisible">
-      {{ productFormVisible ? 'დახურვა' : 'პროდუქტი დამატება' }}
-    </button>
-    <button class="btn" mat-flat-button routerLink="/product"  > ჩემი პროდუქტები </button>
-  </div>
- </div>
-      
- 
-
-
-   <!-- მეორე კომპონენტი -->
-
-   
-
-
 </div>
 
 <div class="conteiner">
@@ -120,7 +110,6 @@
         </mat-error>
       </mat-form-field>
       
-      <!-- დამატებული მდებარეობის ველი -->
       <mat-form-field class="example-full-width">
         <mat-label>მდებარეობა</mat-label>
         <input matInput formControlName="location">
@@ -139,17 +128,26 @@
   
       <div class="imageupload">
         <label for="productImageInput">პროდუქტის ფოტო</label>
-        <!-- პროდუქტის სურათის input - ამოღებულია capture ატრიბუტი -->
+        
+        <!-- გამოსწორებული პროდუქტის სურათის input Android Chrome-ისთვის -->
         <input 
           type="file" 
           id="productImageInput" 
-          accept="image/*" 
-          style="display: none;" 
+          accept="image/*,image/jpeg,image/jpg,image/png,image/gif" 
+          style="position: absolute; left: -9999px; opacity: 0;"
           (change)="onFileSelected($event, 'product')"
+          #productInput
         />
+        
         <button type="button" mat-raised-button (click)="triggerProductImageInput()" class="upload-btn">
           აირჩიეთ ფოტო
         </button>
+        
+        <!-- Alternative button for Android Chrome users -->
+        <label for="productImageInput" class="upload-btn-alternative" style="display: inline-block; margin-left: 10px; padding: 8px 16px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; text-align: center;">
+          ალტერნატიული არჩევა
+        </label>
+        
         <div *ngIf="productImagePreview" class="image-preview-container">
           <img [src]="productImagePreview" alt="პროდუქტის სურათი" style="width: 150px; height: 150px;" class="image-preview">
         </div>
@@ -160,5 +158,4 @@
       </button>
     </form>
   </div>
-
 </div>
