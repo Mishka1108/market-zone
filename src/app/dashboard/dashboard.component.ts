@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../services/auth.service';
@@ -15,6 +15,7 @@ import { startWith, map } from 'rxjs/operators';
 import { MatSelectModule } from '@angular/material/select';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 @Component({
   selector: 'app-dashboard',
@@ -30,12 +31,16 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
     MatInputModule, 
     MatFormFieldModule,
     MatSnackBarModule,
-    RouterLink
+    RouterLink,
+    MatProgressSpinnerModule
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit {
+  @ViewChild('profileInput', { static: false }) profileInputRef!: ElementRef<HTMLInputElement>;
+  @ViewChild('productInput', { static: false }) productInputRef!: ElementRef<HTMLInputElement>;
+
   currentUser: User | null = null;
   productFormVisible: boolean = false;
   isUploading: boolean = false;
@@ -68,12 +73,18 @@ export class DashboardComponent implements OnInit {
   ];
   filteredCategories!: string[];
 
+  // ანდროიდ Chrome detection
+  private isAndroidChrome = false;
+
   constructor(
     private authService: AuthService,
     private productService: ProductService,
     private router: Router,
-    private snackBar: MatSnackBar
-  ) {}
+    private snackBar: MatSnackBar,
+    private ngZone: NgZone
+  ) {
+    this.detectAndroidChrome();
+  }
   
   ngOnInit(): void {
     this.authService.currentUser$.subscribe(user => {
@@ -94,6 +105,12 @@ export class DashboardComponent implements OnInit {
     .subscribe((filtered: string[]) => {
       this.filteredCategories = filtered;
     });
+  }
+
+  private detectAndroidChrome(): void {
+    const userAgent = navigator.userAgent.toLowerCase();
+    this.isAndroidChrome = userAgent.includes('android') && userAgent.includes('chrome');
+    console.log('Android Chrome detected:', this.isAndroidChrome);
   }
   
   private _filterCategories(value: string): string[] {
@@ -125,114 +142,192 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/auth/login']);
   }
 
-  // გამოსწორებული მეთოდი Android Chrome-ისთვის
+  // გამოსწორებული პროფილის ფაილის არჩევა
   triggerFileInput(): void {
-    try {
-      const fileInput = document.getElementById('profileImageInput') as HTMLInputElement;
-      if (fileInput) {
-        // Android Chrome-ისთვის საჭირო ცვლილებები
-        fileInput.value = '';
+    this.ngZone.run(() => {
+      try {
+        const fileInput = document.getElementById('profileImageInput') as HTMLInputElement;
         
-        // User gesture-ის შესანარჩუნებლად
-        this.addClickEventListener(fileInput, () => {
-          console.log('Profile image input clicked');
-        });
-        
-        // Force click with proper timing
-        requestAnimationFrame(() => {
-          fileInput.click();
-        });
-      } else {
-        console.error('Profile image input not found');
-        this.showSnackBar('ფაილის არჩევის ველი ვერ მოიძებნა');
+        if (!fileInput) {
+          console.error('Profile image input not found');
+          this.showSnackBar('ფაილის არჩევის ველი ვერ მოიძებნა');
+          return;
+        }
+
+        console.log('Triggering profile file input, Android Chrome:', this.isAndroidChrome);
+
+        // ანდროიდ Chrome-ისთვის განსაკუთრებული მიდგომა
+        if (this.isAndroidChrome) {
+          this.handleAndroidChromeFileInput(fileInput, 'profile');
+        } else {
+          // სტანდარტული მიდგომა სხვა ბრაუზერებისთვის
+          this.handleStandardFileInput(fileInput);
+        }
+
+      } catch (error) {
+        console.error('Error triggering profile file input:', error);
+        this.showSnackBar('ფაილის არჩევისას დაფიქსირდა შეცდომა');
       }
-    } catch (error) {
-      console.error('Error triggering file input:', error);
-      this.showSnackBar('ფაილის არჩევისას დაფიქსირდა შეცდომა');
-    }
+    });
   }
 
-  toggleProductForm(): void {
-    if (!this.productFormVisible && this.userProducts.length >= this.MAX_PRODUCTS_ALLOWED) {
-      this.showSnackBar(`თქვენ არ შეგიძლიათ ${this.MAX_PRODUCTS_ALLOWED}-ზე მეტი პროდუქტის დამატება`);
-      return;
-    }
-    
-    this.productFormVisible = !this.productFormVisible;
-    if (!this.productFormVisible) {
-      this.resetProductForm();
-    }
-  }
-  
-  // გამოსწორებული მეთოდი პროდუქტის სურათისთვის
+  // პროდუქტის სურათის არჩევა
   triggerProductImageInput(): void {
-    try {
-      const fileInput = document.getElementById('productImageInput') as HTMLInputElement;
-      if (fileInput) {
-        // Android Chrome-ისთვის საჭირო ცვლილებები
-        fileInput.value = '';
+    this.ngZone.run(() => {
+      try {
+        const fileInput = document.getElementById('productImageInput') as HTMLInputElement;
         
-        // User gesture-ის შესანარჩუნებლად
-        this.addClickEventListener(fileInput, () => {
-          console.log('Product image input clicked');
-        });
-        
-        // Force click with proper timing
-        requestAnimationFrame(() => {
-          fileInput.click();
-        });
-      } else {
-        console.error('Product image input not found');
-        this.showSnackBar('ფაილის არჩევის ველი ვერ მოიძებნა');
+        if (!fileInput) {
+          console.error('Product image input not found');
+          this.showSnackBar('ფაილის არჩევის ველი ვერ მოიძებნა');
+          return;
+        }
+
+        console.log('Triggering product file input, Android Chrome:', this.isAndroidChrome);
+
+        // ანდროიდ Chrome-ისთვის განსაკუთრებული მიდგომა
+        if (this.isAndroidChrome) {
+          this.handleAndroidChromeFileInput(fileInput, 'product');
+        } else {
+          // სტანდარტული მიდგომა სხვა ბრაუზერებისთვის
+          this.handleStandardFileInput(fileInput);
+        }
+
+      } catch (error) {
+        console.error('Error triggering product file input:', error);
+        this.showSnackBar('ფაილის არჩევისას დაფიქსირდა შეცდომა');
       }
-    } catch (error) {
-      console.error('Error triggering product image input:', error);
-      this.showSnackBar('ფაილის არჩევისას დაფიქსირდა შეცდომა');
-    }
+    });
   }
 
-  // დამხმარე მეთოდი Android Chrome-ისთვის
-  private addClickEventListener(element: HTMLElement, callback: () => void): void {
-    const clickHandler = () => {
-      callback();
-      element.removeEventListener('click', clickHandler);
-    };
-    element.addEventListener('click', clickHandler);
-  }
-
-  // გაუმჯობესებული onFileSelected მეთოდი
-  onFileSelected(event: Event, type: 'profile' | 'product'): void {
-    try {
-      const input = event.target as HTMLInputElement;
+  // ანდროიდ Chrome-ისთვის სპეციალური მიდგომა
+  private handleAndroidChromeFileInput(fileInput: HTMLInputElement, type: 'profile' | 'product'): void {
+    console.log('Handling Android Chrome file input for:', type);
+    
+    // Input-ის სრული რესეტი
+    fileInput.value = '';
+    fileInput.removeAttribute('value');
+    
+    // Touch event simulation for better Android compatibility
+    const touchEvents = ['touchstart', 'touchend', 'click'];
+    
+    // Multiple attempt strategy
+    let attemptCount = 0;
+    const maxAttempts = 3;
+    
+    const attemptClick = () => {
+      attemptCount++;
+      console.log(`Attempt ${attemptCount} to trigger file input`);
       
-      console.log('File selection triggered for:', type);
-      console.log('Input:', input);
-      console.log('Files:', input?.files);
-      
-      if (!input || !input.files || input.files.length === 0) {
-        console.warn('No file selected or input is invalid');
-        // Android Chrome-ში ზოგჯერ delayed file selection ხდება
+      try {
+        // Create and dispatch touch events
+        touchEvents.forEach(eventType => {
+          const event = new TouchEvent(eventType, {
+            bubbles: true,
+            cancelable: true,
+            touches: [],
+            targetTouches: [],
+            changedTouches: []
+          });
+          fileInput.dispatchEvent(event);
+        });
+        
+        // Force focus and click
+        fileInput.focus();
+        
+        // Multiple click attempts with different timings
         setTimeout(() => {
-          if (input?.files && input.files.length > 0) {
-            console.log('Delayed file detection:', input.files[0]);
-            this.processSelectedFile(input.files[0], type);
+          fileInput.click();
+        }, 10);
+        
+        setTimeout(() => {
+          if (attemptCount < maxAttempts && (!fileInput.files || fileInput.files.length === 0)) {
+            attemptClick();
           }
         }, 100);
-        return;
+        
+      } catch (error) {
+        console.error(`Error in attempt ${attemptCount}:`, error);
+        if (attemptCount < maxAttempts) {
+          setTimeout(attemptClick, 200);
+        }
       }
-      
-      const file = input.files[0];
-      this.processSelectedFile(file, type);
-      
-    } catch (error) {
-      console.error('Error in file selection:', error);
-      this.showSnackBar('სურათის არჩევისას დაფიქსირდა შეცდომა');
-    }
+    };
+    
+    // Start the attempt sequence
+    requestAnimationFrame(() => {
+      attemptClick();
+    });
   }
 
-  // ფაილის დამუშავების ცალკე მეთოდი
+  // სტანდარტული ბრაუზერებისთვის
+  private handleStandardFileInput(fileInput: HTMLInputElement): void {
+    fileInput.value = '';
+    
+    requestAnimationFrame(() => {
+      fileInput.click();
+    });
+  }
+
+  // ფაილის არჩევის event handler
+  onFileSelected(event: Event, type: 'profile' | 'product'): void {
+    this.ngZone.run(() => {
+      try {
+        const input = event.target as HTMLInputElement;
+        
+        console.log('File selection event triggered for:', type);
+        console.log('Input element:', input);
+        console.log('Files found:', input?.files?.length || 0);
+        
+        // ანდროიდ Chrome-ში delayed response-ის მოწმება
+        if (!input || !input.files || input.files.length === 0) {
+          console.warn('No file selected immediately, checking for delayed selection...');
+          
+          // Multiple delayed checks for Android Chrome
+          const checkDelayedSelection = (attempt: number = 1) => {
+            setTimeout(() => {
+              console.log(`Delayed check attempt ${attempt}`);
+              if (input?.files && input.files.length > 0) {
+                console.log('Delayed file detection successful:', input.files[0].name);
+                this.processSelectedFile(input.files[0], type);
+              } else if (attempt < 5) {
+                checkDelayedSelection(attempt + 1);
+              } else {
+                console.warn('No file detected after multiple attempts');
+              }
+            }, attempt * 100);
+          };
+          
+          checkDelayedSelection();
+          return;
+        }
+        
+        // Immediate file processing
+        const file = input.files[0];
+        console.log('File selected immediately:', file.name);
+        this.processSelectedFile(file, type);
+        
+      } catch (error) {
+        console.error('Error in file selection handler:', error);
+        this.showSnackBar('სურათის არჩევისას დაფიქსირდა შეცდომა');
+      }
+    });
+  }
+
+  // Alternative file selection for Android Chrome (using label)
+  onAlternativeFileSelected(event: Event, type: 'profile' | 'product'): void {
+    console.log('Alternative file selection triggered for:', type);
+    this.onFileSelected(event, type);
+  }
+
+  // ფაილის დამუშავება
   private processSelectedFile(file: File, type: 'profile' | 'product'): void {
-    console.log('Processing file:', file.name, 'Type:', file.type, 'Size:', file.size);
+    console.log('Processing selected file:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: file.lastModified
+    });
     
     // ფაილის ტიპის შემოწმება
     if (!file.type.startsWith('image/')) {
@@ -247,6 +342,12 @@ export class DashboardComponent implements OnInit {
       return;
     }
     
+    // ცარიელი ფაილის შემოწმება
+    if (file.size === 0) {
+      this.showSnackBar('არჩეული ფაილი ცარიელია');
+      return;
+    }
+    
     if (type === 'profile') {
       this.handleProfileImageSelection(file);
     } else if (type === 'product') {
@@ -255,23 +356,26 @@ export class DashboardComponent implements OnInit {
   }
   
   private handleProfileImageSelection(file: File): void {
-    console.log('Handling profile image selection:', file.name);
+    console.log('Processing profile image:', file.name);
     this.isUploading = true;
     
     // პრევიუს სურათის ჩვენება
     const reader = new FileReader();
+    
     reader.onload = (e: ProgressEvent<FileReader>) => {
       const previewElement = document.getElementById('profileImagePreview') as HTMLImageElement;
       if (previewElement && e.target?.result) {
         previewElement.src = e.target.result as string;
-        console.log('Profile image preview updated');
+        console.log('Profile image preview updated successfully');
       }
     };
+    
     reader.onerror = (error) => {
-      console.error('Error reading file for preview:', error);
+      console.error('Error reading profile image file:', error);
       this.showSnackBar('სურათის წაკითხვისას დაფიქსირდა შეცდომა');
       this.isUploading = false;
     };
+    
     reader.readAsDataURL(file);
     
     // პროფილის სურათის განახლება
@@ -283,8 +387,10 @@ export class DashboardComponent implements OnInit {
           this.showSnackBar('პროფილის სურათი განახლდა');
         },
         error: (error) => {
-          console.error('პროფილის სურათის განახლების შეცდომა', error);
+          console.error('Profile image update error:', error);
           this.showSnackBar('პროფილის სურათის განახლება ვერ მოხერხდა');
+          
+          // Restore previous image if available
           if (this.currentUser?.profileImage) {
             const previewElement = document.getElementById('profileImagePreview') as HTMLImageElement;
             if (previewElement) {
@@ -296,24 +402,39 @@ export class DashboardComponent implements OnInit {
   }
   
   private handleProductImageSelection(file: File): void {
-    console.log('Handling product image selection:', file.name);
+    console.log('Processing product image:', file.name);
     this.productImage = file;
     
     // პრევიუს სურათის ჩვენება
     const reader = new FileReader();
+    
     reader.onload = (e: ProgressEvent<FileReader>) => {
       if (e.target?.result) {
         this.productImagePreview = e.target.result as string;
-        console.log('Product image preview updated');
+        console.log('Product image preview updated successfully');
       }
     };
+    
     reader.onerror = (error) => {
-      console.error('Error reading product image file for preview:', error);
+      console.error('Error reading product image file:', error);
       this.showSnackBar('პროდუქტის სურათის წაკითხვისას დაფიქსირდა შეცდომა');
       this.productImage = null;
       this.productImagePreview = null;
     };
+    
     reader.readAsDataURL(file);
+  }
+
+  toggleProductForm(): void {
+    if (!this.productFormVisible && this.userProducts.length >= this.MAX_PRODUCTS_ALLOWED) {
+      this.showSnackBar(`თქვენ არ შეგიძლიათ ${this.MAX_PRODUCTS_ALLOWED}-ზე მეტი პროდუქტის დამატება`);
+      return;
+    }
+    
+    this.productFormVisible = !this.productFormVisible;
+    if (!this.productFormVisible) {
+      this.resetProductForm();
+    }
   }
   
   addProduct(): void {
@@ -392,7 +513,7 @@ export class DashboardComponent implements OnInit {
   
   showSnackBar(message: string): void {
     this.snackBar.open(message, 'დახურვა', {
-      duration: 1000,
+      duration: 3000,
       horizontalPosition: 'center',
       verticalPosition: 'bottom'
     });

@@ -11,16 +11,27 @@
   <!-- პირველი კომპონენტი -->
   <div class="profile-information">
     <div class="image-upload-container">
-      <!-- გამოსწორებული პროფილის სურათის input Android Chrome-ისთვის -->
+      <!-- გამოსწორებული პროფილის სურათის input ყველა ბრაუზერისთვის -->
       <input 
         type="file" 
         id="profileImageInput" 
-        accept="image/*,image/jpeg,image/jpg,image/png,image/gif" 
-        style="position: absolute; left: -9999px; opacity: 0;"
+        accept="image/*,image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+        capture="environment"
+        style="position: absolute; left: -9999px; opacity: 0; width: 1px; height: 1px; overflow: hidden;"
         (change)="onFileSelected($event, 'profile')"
         #profileInput
+        tabindex="-1"
       />
     
+      <!-- ალტერნატიული hidden input ანდროიდისთვის -->
+      <input 
+        type="file" 
+        id="profileImageInputAlt" 
+        accept="image/*" 
+        style="display: none;"
+        (change)="onAlternativeFileSelected($event, 'profile')"
+      />
+
       <img 
         [src]="currentUser?.profileImage || 'https://i.ibb.co/GvshXkLK/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg'" 
         id="profileImagePreview" 
@@ -29,6 +40,13 @@
         (click)="triggerFileInput()"
         style="cursor: pointer;"
       />
+
+      <!-- ანდროიდისთვის ალტერნატიული ღილაკი -->
+      <label for="profileImageInputAlt" class="android-upload-btn" 
+             style="display: inline-block; margin-top: 10px; padding: 8px 16px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; text-align: center; font-size: 12px;">
+        📷 ალტერნატიული ფოტო
+      </label>
+
       <button class="btn" mat-flat-button (click)="logout()">გასვლა</button>
     </div>
     
@@ -109,9 +127,10 @@
           ფასი უნდა იყოს დადებითი რიცხვი
         </mat-error>
       </mat-form-field>
-       <mat-form-field class="example-full-width">
+
+      <mat-form-field class="example-full-width">
         <mat-label>ტელეფონის ნომერი</mat-label>
-        <input matInput type="number" formControlName="phone">
+        <input matInput type="tel" formControlName="phone">
         <mat-error *ngIf="productForm.controls.phone.hasError('required')">
           ტელეფონის ნომერი აუცილებელია
         </mat-error>
@@ -119,7 +138,8 @@
           ტელეფონის ნომერი უნდა იყოს 9-დან 15-მდე ციფრი
         </mat-error>
       </mat-form-field>
-       <mat-form-field class="example-full-width">
+
+      <mat-form-field class="example-full-width">
         <mat-label>იმეილი</mat-label>
         <input matInput type="email" formControlName="email">
         <mat-error *ngIf="productForm.controls.email.hasError('required')">
@@ -131,51 +151,103 @@
       </mat-form-field>
       
       <mat-form-field class="example-full-width">
+        <mat-label>აღწერა</mat-label>
+        <textarea matInput formControlName="description" rows="4"></textarea>
+        <mat-error *ngIf="productForm.controls.description.hasError('required')">
+          აღწერა აუცილებელია
+        </mat-error>
+      </mat-form-field>
+
+      <mat-form-field class="example-full-width">
         <mat-label>მდებარეობა</mat-label>
         <input matInput formControlName="location">
         <mat-error *ngIf="productForm.controls.location.hasError('required')">
           მდებარეობა აუცილებელია
         </mat-error>
       </mat-form-field>
-      
-      <mat-form-field class="example-full-width">
-        <mat-label>პროდუცტის აღწერა</mat-label>
-        <textarea matInput formControlName="description" rows="3"></textarea>
-        <mat-error *ngIf="productForm.controls.description.hasError('required')">
-          აღწერა აუცილებელია
-        </mat-error>
-      </mat-form-field>
-  
-      <div class="imageupload">
-        <label for="productImageInput">პროდუქტის ფოტო</label>
+
+      <!-- პროდუქტის სურათის ატვირთვა -->
+      <div class="image-upload-section">
+        <h3>პროდუქტის სურათი</h3>
         
-        <!-- გამოსწორებული პროდუქტის სურათის input Android Chrome-ისთვის -->
         <input 
           type="file" 
           id="productImageInput" 
-          accept="image/*,image/jpeg,image/jpg,image/png,image/gif" 
-          style="position: absolute; left: -9999px; opacity: 0;"
+          accept="image/*,image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+          capture="environment"
+          style="position: absolute; left: -9999px; opacity: 0; width: 1px; height: 1px; overflow: hidden;"
           (change)="onFileSelected($event, 'product')"
           #productInput
+          tabindex="-1"
         />
-        
-        <button type="button" mat-raised-button (click)="triggerProductImageInput()" class="upload-btn">
-          აირჩიეთ ფოტო
-        </button>
-        
-        <!-- Alternative button for Android Chrome users -->
-        <label for="productImageInput" class="upload-btn-alternative" style="display: inline-block; margin-left: 10px; padding: 8px 16px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; text-align: center;">
-          ალტერნატიული არჩევა
-        </label>
-        
-        <div *ngIf="productImagePreview" class="image-preview-container">
-          <img [src]="productImagePreview" alt="პროდუქტის სურათი" style="width: 150px; height: 150px;" class="image-preview">
+
+        <!-- ალტერნატიული hidden input ანდროიდისთვის -->
+        <input 
+          type="file" 
+          id="productImageInputAlt" 
+          accept="image/*" 
+          style="display: none;"
+          (change)="onAlternativeFileSelected($event, 'product')"
+        />
+
+        <div class="image-upload-area" (click)="triggerProductImageInput()">
+          <div *ngIf="!productImagePreview" class="upload-placeholder">
+            <span class="upload-icon">📷</span>
+            <p>დააჭირეთ სურათის ასარჩევად</p>
+          </div>
+          <img *ngIf="productImagePreview" [src]="productImagePreview" class="product-image-preview" alt="Product Preview" />
         </div>
+
+        <!-- ანდროიდისთვის ალტერნატიული ღილაკი -->
+        <label for="productImageInputAlt" class="android-upload-btn" 
+               style="display: inline-block; margin-top: 10px; padding: 8px 16px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; text-align: center; font-size: 12px;">
+          📷 ალტ. სურათის არჩევა
+        </label>
       </div>
-     
-      <button type="submit" mat-raised-button [disabled]="productForm.invalid || !productImage || isUploading">
-        {{ isUploading ? 'იტვირთება...' : 'დამატება' }}
-      </button>
+
+      <div class="form-actions">
+        <button mat-flat-button type="submit" class="btn submit-btn" [disabled]="productForm.invalid || isUploading">
+          <span *ngIf="!isUploading">პროდუქტის დამატება</span>
+          <span *ngIf="isUploading">იტვირთება...</span>
+        </button>
+        <button mat-flat-button type="button" class="btn cancel-btn" (click)="toggleProductForm()">
+          გაუქმება
+        </button>
+      </div>
     </form>
+  </div>
+</div>
+
+<h2>ჩემი პროდუქტები</h2> 
+
+<div class="user-products-section" *ngIf="userProducts.length > 0">
+  
+  <div class="products-grid">
+    <div class="product-card" *ngFor="let product of userProducts">
+     
+        <img [src]="product.image || 'https://i.ibb.co/GvshXkLK/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg'" [alt]="product.title" />
+     
+      <div class="product-info">
+        <h3>{{ product.title }}</h3>
+        <p class="product-category">{{ product.category }}</p>
+        <p class="product-price">{{ product.price }} ₾</p>
+        <p class="product-year">წელი: {{ product.year }}</p>
+        <p class="product-location">{{ product.location }}</p>
+        <p class="product-date">დამატებულია: {{ formatDate(product.createdAt) }}</p>
+      </div>
+      <div class="product-actions">
+        <button mat-flat-button class="delete-btn" (click)="deleteProduct(product._id!)">
+          წაშლა
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading indicator -->
+<div class="loading-overlay" *ngIf="isUploading">
+  <div class="loading-spinner">
+    <mat-progress-spinner diameter="50"></mat-progress-spinner>
+    <p>იტვირთება...</p>
   </div>
 </div>
