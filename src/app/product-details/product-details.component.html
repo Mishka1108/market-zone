@@ -1,3 +1,4 @@
+
 <div class="product-details-container">
   <div class="loading" *ngIf="isLoading">
     <mat-spinner diameter="50"></mat-spinner>
@@ -30,24 +31,29 @@
         <p class="description">აღწერა: {{ product.description || 'არ არის მითითებული' }}</p>
         <p class="location">ადგილმდებარეობა: {{ product.location || 'არ არის მითითებული' }}</p>
         
-        <!-- გამყიდველის ინფორმაცია - ყოველთვის ჩნდება -->
-        <div class="seller-info">
-          <h2>გამყიდველის ინფორმაცია</h2>
-          <p class="seller">გამყიდველი: {{ product.userName || 'არ არის მითითებული' }}</p>
+        <!-- გაუმჯობესებული კონტაქტის ინფორმაცია -->
+        <div class="seller-info-section">
+          <p class="seller-info">გამყიდველის ინფორმაცია:</p>
+          <p class="seller-name">სახელი: {{ product.userName || 'არ არის მითითებული' }}</p>
+          <p class="seller-phone">ტელეფონი: {{ product.phone || 'არ არის მითითებული' }}</p>
+          <p class="seller-email">ელ. ფოსტა: {{ product.email || 'არ არის მითითებული' }}</p>
+        </div>
+
+        <!-- კონტაქტის ღილაკები -->
+        <div class="contact-buttons">
+          <button mat-raised-button color="primary" 
+                  *ngIf="product.phone && product.phone !== 'არ არის მითითებული'"
+                  (click)="callPhone()">
+            <mat-icon>phone</mat-icon>
+            დარეკვა
+          </button>
           
-          <!-- კონტაქტის ინფორმაცია მხოლოდ ავტორიზებული მომხმარებლისთვის -->
-          <div *ngIf="currentUser; else loginPrompt">
-            <p class="contact">საკონტაქტო მეილი: {{ currentUser.email || 'არ არის მითითებული' }}</p>
-            <p class="contact">საკონტაქტო ტელეფონი: {{ currentUser.phone || 'არ არის მითითებული' }}</p>
-          </div>
-          
-          <!-- თუ მომხმარებელი არ არის შესული -->
-          <ng-template #loginPrompt>
-            <div class="login-prompt">
-              <p><strong>საკონტაქტო ინფორმაციის სანახავად გთხოვთ შეხვიდეთ სისტემაში</strong></p>
-              <button mat-raised-button color="primary" routerLink="/auth/login">შესვლა</button>
-            </div>
-          </ng-template>
+          <button mat-raised-button color="accent"
+                  *ngIf="product.email && product.email !== 'არ არის მითითებული'"
+                  (click)="sendEmail()">
+            <mat-icon>email</mat-icon>
+            იმეილის გაგზავნა
+          </button>
         </div>
       </div>
     </div>

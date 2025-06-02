@@ -109,6 +109,26 @@
           ფასი უნდა იყოს დადებითი რიცხვი
         </mat-error>
       </mat-form-field>
+       <mat-form-field class="example-full-width">
+        <mat-label>ტელეფონის ნომერი</mat-label>
+        <input matInput type="number" formControlName="phone">
+        <mat-error *ngIf="productForm.controls.phone.hasError('required')">
+          ტელეფონის ნომერი აუცილებელია
+        </mat-error>
+        <mat-error *ngIf="productForm.controls.phone.hasError('pattern')">
+          ტელეფონის ნომერი უნდა იყოს 9-დან 15-მდე ციფრი
+        </mat-error>
+      </mat-form-field>
+       <mat-form-field class="example-full-width">
+        <mat-label>იმეილი</mat-label>
+        <input matInput type="email" formControlName="email">
+        <mat-error *ngIf="productForm.controls.email.hasError('required')">
+          იმეილი აუცილებელია
+        </mat-error>
+        <mat-error *ngIf="productForm.controls.email.hasError('email')">
+          მიუთითეთ სწორი იმეილი
+        </mat-error>
+      </mat-form-field>
       
       <mat-form-field class="example-full-width">
         <mat-label>მდებარეობა</mat-label>

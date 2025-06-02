@@ -10,6 +10,8 @@ export interface Product {
   year: number;
   image: string;
   location?: string;
+  phone?: string;
+  email?: string;
   
   // გამყიდველის/მომხმარებლის ინფორმაცია
   userName?: string;

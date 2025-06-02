@@ -95,66 +95,96 @@ export class ProductService {
       );
   }
 
-  // კონკრეტული პროდუქტის მიღება ID-ით (საჯაროდ ხელმისაწვდომი)
+  // გაუმჯობესებული getProductById მეთოდი
   getProductById(productId: string): Observable<any> {
     console.log(`მოითხოვება პროდუქტი ID-ით: ${productId}`);
     return this.http.get(`${this.baseUrl}/products/${productId}`).pipe(
       tap((response: any) => {
-        console.log('მიღებული პროდუქტის მონაცემები:', response);
+        console.log('API-დან მიღებული რო პასუხი:', response);
       }),
       map((response: any) => {
-        // გარდავქმნათ API პასუხი, რომ დავრწმუნდეთ რომ მომხმარებლის კონტაქტები არის ხელმისაწვდომი
-        let product;
-        
         // განვსაზღვროთ პროდუქტის ობიექტი
-        if (response.product) {
-          product = response.product;
-        } else {
-          product = response;
+        let product = response.product || response;
+        
+        console.log('დამუშავებამდე პროდუქტი:', product);
+        
+        // ყველა შესაძლო მომხმარებლის კონტაქტის წყაროს შემოწმება
+        const contactSources = [
+          // პირდაპირ პროდუქტის ლეველზე
+          {
+            email: product.email,
+            phone: product.phone,
+            name: product.userName
+          },
+          // user ობიექტიდან
+          {
+            email: product.user?.email,
+            phone: product.user?.phone,
+            name: product.user?.name || product.user?.firstName
+          },
+          // seller ობიექტიდან
+          {
+            email: product.seller?.email || product.sellerEmail,
+            phone: product.seller?.phone || product.sellerPhone,
+            name: product.seller?.name || product.seller?.firstName || product.sellerName
+          },
+          // owner ობიექტიდან
+          {
+            email: product.owner?.email,
+            phone: product.owner?.phone,
+            name: product.owner?.name || product.owner?.firstName
+          },
+          // userEmail, userPhone ცვლადებიდან
+          {
+            email: product.userEmail,
+            phone: product.userPhone,
+            name: product.userName
+          }
+        ];
+        
+        // ვიპოვოთ პირველი ვალიდური კონტაქტი
+        let finalContact = {
+          email: '',
+          phone: '',
+          name: ''
+        };
+        
+        for (const source of contactSources) {
+          if (!finalContact.email && source.email) {
+            finalContact.email = source.email;
+          }
+          if (!finalContact.phone && source.phone) {
+            finalContact.phone = source.phone;
+          }
+          if (!finalContact.name && source.name) {
+            finalContact.name = source.name;
+          }
+          
+          // თუ ყველა საჭირო ინფორმაცია მოიძებნა, შევწყვიტოთ
+          if (finalContact.email && finalContact.phone && finalContact.name) {
+            break;
+          }
         }
         
-        // მომხმარებლის ინფორმაციის გამოტანა სხვადასხვა შესაძლო წყაროებიდან
+        // პროდუქტს დავუმატოთ საბოლოო კონტაქტი
+        product.email = finalContact.email || 'არ არის მითითებული';
+        product.phone = finalContact.phone || 'არ არის მითითებული';
+        product.userName = finalContact.name || 'არ არის მითითებული';
         
-        // 1. თუ მომხმარებლის ინფორმაცია არის user ობიექტში
-        if (product.user) {
-          product.userName = product.user.name || product.user.firstName || '';
-          product.userEmail = product.user.email || '';
-          product.userPhone = product.user.phone || '';
-        }
-        
-        // 2. თუ მომხმარებლის ინფორმაცია არის seller ობიექტში
-        if (product.seller && (!product.userName || !product.userEmail || !product.userPhone)) {
-          product.userName = product.userName || product.seller.name || product.seller.firstName || product.sellerName || '';
-          product.userEmail = product.userEmail || product.seller.email || product.sellerEmail || '';
-          product.userPhone = product.userPhone || product.seller.phone || product.sellerPhone || '';
-        }
-        
-        // 3. თუ მომხმარებლის ინფორმაცია არის პირდაპირ პროდუქტის ობიექტში
-        product.userName = product.userName || product.sellerName || '';
-        product.userEmail = product.userEmail || product.sellerEmail || product.email || '';
-        product.userPhone = product.userPhone || product.sellerPhone || product.phone || '';
-        
-        // 4. თუ მომხმარებლის ინფორმაცია არის owner ობიექტში
-        if (product.owner && (!product.userName || !product.userEmail || !product.userPhone)) {
-          product.userName = product.userName || product.owner.name || product.owner.firstName || '';
-          product.userEmail = product.userEmail || product.owner.email || '';
-          product.userPhone = product.userPhone || product.owner.phone || '';
-        }
-        
-        // მონაცემების კონსოლში გამოტანა დებაგისთვის
-        console.log('გარდაქმნილი პროდუქტის ობიექტი:', product);
-        console.log('მომხმარებლის საკონტაქტო ინფორმაცია:', {
+        // დამატებითი ლოგი დებაგისთვის
+        console.log('საბოლოო კონტაქტი:', finalContact);
+        console.log('დამუშავების შემდეგ პროდუქტი:', {
+          email: product.email,
+          phone: product.phone,
           userName: product.userName,
-          userEmail: product.userEmail,
-          userPhone: product.userPhone
+          title: product.title
         });
         
-        // დავაბრუნოთ იგივე სტრუქტურის ობიექტი რაც API-დან მივიღეთ
-        if (response.product) {
-          return { product };
-        } else {
-          return product;
-        }
+        // დავაბრუნოთ სწორი სტრუქტურა
+        return response.product ? { product } : product;
+      }),
+      tap((finalResponse: any) => {
+        console.log('საბოლოო პასუხი რომელიც დაბრუნება:', finalResponse);
       })
     );
   }

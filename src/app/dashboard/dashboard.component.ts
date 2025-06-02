@@ -50,6 +50,8 @@ export class DashboardComponent implements OnInit {
     price: new FormControl<number | null>(null, [Validators.required, Validators.min(0)]),
     description: new FormControl<string>('', [Validators.required]),
     location: new FormControl<string>('', [Validators.required]),
+    phone: new FormControl<string>('', [Validators.required, Validators.pattern(/^\+?\d{9,15}$/)]),
+    email: new FormControl<string>('', [Validators.required, Validators.email]),
   });
   
   productImage: File | null = null;
@@ -337,10 +339,12 @@ export class DashboardComponent implements OnInit {
     formData.append('price', this.productForm.value.price?.toString() || '');
     formData.append('description', this.productForm.value.description || '');
     formData.append('location', this.productForm.value.location || '');
+    formData.append('phone', this.productForm.value.phone || '');
+    formData.append('email', this.productForm.value.email || '');
     formData.append('productImage', this.productImage);
-    
+
     this.isUploading = true;
-    
+
     this.productService.addProduct(formData)
       .pipe(finalize(() => this.isUploading = false))
       .subscribe({
@@ -388,7 +392,7 @@ export class DashboardComponent implements OnInit {
   
   showSnackBar(message: string): void {
     this.snackBar.open(message, 'დახურვა', {
-      duration: 3000,
+      duration: 1000,
       horizontalPosition: 'center',
       verticalPosition: 'bottom'
     });
