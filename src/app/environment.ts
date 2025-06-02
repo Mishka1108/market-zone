@@ -1,5 +1,5 @@
 // src/environments/environment.ts
 export const environment = {
     production: true,
-    apiUrl: 'http://localhost:10000/api', // HTTPS -> HTTP
+    apiUrl: 'https://fullproject-xtbq.onrender.com/api', // HTTPS -> HTTP
   };
