@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from '../app/guard/auth.guard';
 import { adminGuard } from '../app/guard/admin.guard';
 import { HomeComponent } from './home/home.component';
-import { ProductComponent } from './product/product.component';
+
 import { ContactComponent } from './contact/contact.component';
 import { PublicProductsComponent } from './public-products/public-products.component';
 import { ProductDetailComponent, } from './product-details/product-details.component';
@@ -53,7 +53,6 @@ export const routes: Routes = [
   },
   { path: '', component: HomeComponent }, // საწყისი გვერდი შევცვალეთ
   { path: 'home', component: HomeComponent },
-  { path: 'product', component: ProductComponent, canActivate: [() => authGuard()] },
   { path: 'contact', component: ContactComponent },
   {path: 'login', component: LoginComponent},
   { path: 'public-products', component: PublicProductsComponent }, // საჯარო პროდუქტების გვერდი

@@ -1,6 +1,6 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router,} from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { ProductService } from '../services/product.service';
 import { User } from '../models/user.model';
@@ -31,7 +31,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatInputModule, 
     MatFormFieldModule,
     MatSnackBarModule,
-    RouterLink,
     MatProgressSpinnerModule
   ],
   templateUrl: './dashboard.component.html',
@@ -437,51 +436,64 @@ export class DashboardComponent implements OnInit {
     }
   }
   
-  addProduct(): void {
-    if (this.productForm.invalid) {
-      this.showSnackBar('გთხოვთ შეავსოთ ყველა საჭირო ველი');
-      return;
-    }
-    
-    if (!this.productImage) {
-      this.showSnackBar('გთხოვთ აირჩიოთ პროდუქტის სურათი');
-      return;
-    }
-    
-    if (this.userProducts.length >= this.MAX_PRODUCTS_ALLOWED) {
-      this.showSnackBar(`თქვენ არ შეგიძლიათ ${this.MAX_PRODUCTS_ALLOWED}-ზე მეტი პროდუქტის დამატება`);
-      return;
-    }
-    
-    const formData = new FormData();
-    formData.append('title', this.productForm.value.title || '');
-    formData.append('category', this.productForm.value.category || '');
-    formData.append('year', this.productForm.value.year?.toString() || '');
-    formData.append('price', this.productForm.value.price?.toString() || '');
-    formData.append('description', this.productForm.value.description || '');
-    formData.append('location', this.productForm.value.location || '');
-    formData.append('phone', this.productForm.value.phone || '');
-    formData.append('email', this.productForm.value.email || '');
-    formData.append('productImage', this.productImage);
-
-    this.isUploading = true;
-
-    this.productService.addProduct(formData)
-      .pipe(finalize(() => this.isUploading = false))
-      .subscribe({
-        next: (response) => {
-          this.showSnackBar('პროდუქტი წარმატებით დაემატა');
-          this.resetProductForm();
-          this.loadUserProducts();
-          this.productFormVisible = false;
-        },
-        error: (error) => {
-          console.error('პროდუქტის დამატების შეცდომა:', error);
-          this.showSnackBar('პროდუქტის დამატება ვერ მოხერხდა');
-        }
-      });
+ addProduct(): void {
+  if (this.productForm.invalid) {
+    this.showSnackBar('გთხოვთ შეავსოთ ყველა საჭირო ველი');
+    return;
   }
   
+  if (!this.productImage) {
+    this.showSnackBar('გთხოვთ აირჩიოთ პროდუქტის სურათი');
+    return;
+  }
+  
+  if (this.userProducts.length >= this.MAX_PRODUCTS_ALLOWED) {
+    this.showSnackBar(`თქვენ არ შეგიძლიათ ${this.MAX_PRODUCTS_ALLOWED}-ზე მეტი პროდუქტის დამატება`);
+    return;
+  }
+  
+  // ფორმის მნიშვნელობების ლოგირება debug-ისთვის
+  console.log('Form values:', this.productForm.value);
+  console.log('Phone value:', this.productForm.value.phone);
+  console.log('Email value:', this.productForm.value.email);
+  
+  const formData = new FormData();
+  formData.append('title', this.productForm.value.title || '');
+  formData.append('category', this.productForm.value.category || '');
+  formData.append('year', this.productForm.value.year?.toString() || '');
+  formData.append('price', this.productForm.value.price?.toString() || '');
+  formData.append('description', this.productForm.value.description || '');
+  formData.append('location', this.productForm.value.location || '');
+  
+  // ზუსტად ასე გადაეცი phone და email
+  formData.append('phone', this.productForm.value.phone || '');
+  formData.append('email', this.productForm.value.email || '');
+  formData.append('productImage', this.productImage);
+
+  // შეამოწმე რა გადაეცემა formData-ში
+  console.log('FormData content:');
+  for (const [key, value] of formData.entries()) {
+    console.log(`${key}:`, value);
+  }
+
+  this.isUploading = true;
+
+  this.productService.addProduct(formData)
+    .pipe(finalize(() => this.isUploading = false))
+    .subscribe({
+      next: (response) => {
+        console.log('Server response:', response);
+        this.showSnackBar('პროდუქტი წარმატებით დაემატა');
+        this.resetProductForm();
+        this.loadUserProducts();
+        this.productFormVisible = false;
+      },
+      error: (error) => {
+        console.error('პროდუქტის დამატების შეცდომა:', error);
+        this.showSnackBar('პროდუქტის დამატება ვერ მოხერხდა');
+      }
+    });
+}
   deleteProduct(productId: string): void {
     if (confirm('ნამდვილად გსურთ პროდუქტის წაშლა?')) {
       this.productService.deleteProduct(productId).subscribe({

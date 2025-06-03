@@ -74,7 +74,6 @@
         <button mat-flat-button class="btn" (click)="toggleProductForm()" [disabled]="!canAddMoreProducts() && !productFormVisible">
           {{ productFormVisible ? 'დახურვა' : 'პროდუქტი დამატება' }}
         </button>
-        <button class="btn" mat-flat-button routerLink="/product">ჩემი პროდუქტები</button>
       </div>
     </div>
   </div>
@@ -84,7 +83,7 @@
   <div class="card3" *ngIf="productFormVisible">
     <h2>შეიყვანეთ პროდუქტის ინფორმაცია</h2>
     
-    <form [formGroup]="productForm" class="card3" (ngSubmit)="addProduct()">
+    <form [formGroup]="productForm" class="card4" (ngSubmit)="addProduct()">
       <mat-form-field class="example-full-width">
         <mat-label>პროდუქტის სახელი</mat-label>
         <input matInput formControlName="title">
@@ -175,7 +174,7 @@
           id="productImageInput" 
           accept="image/*,image/jpeg,image/jpg,image/png,image/gif,image/webp" 
           capture="environment"
-          style="position: absolute; left: -9999px; opacity: 0; width: 1px; height: 1px; overflow: hidden;"
+          class="imgupload"
           (change)="onFileSelected($event, 'product')"
           #productInput
           tabindex="-1"
@@ -186,7 +185,8 @@
           type="file" 
           id="productImageInputAlt" 
           accept="image/*" 
-          style="display: none;"
+          class="imgupload"
+          style="display: none; "
           (change)="onAlternativeFileSelected($event, 'product')"
         />
 
