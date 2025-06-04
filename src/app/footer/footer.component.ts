@@ -12,5 +12,18 @@ import { MatIconModule } from '@angular/material/icon';
 export class FooterComponent {
 public currentYear: number = new Date().getFullYear();
 
+//  currentYear = new Date().getFullYear();
 
+  constructor() {}
+
+  onNavigate(route: string) {
+    console.log('ნავიგაცია:', route);
+    // Router navigation logic here
+    // this.router.navigate([route]);
+  }
+
+  onSocialClick(platform: string) {
+    console.log('სოციალური პლატფორმა:', platform);
+  }
 }
+
