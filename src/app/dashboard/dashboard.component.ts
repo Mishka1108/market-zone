@@ -1,8 +1,9 @@
 import { Component, OnInit, ViewChild, ElementRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router,} from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { ProductService } from '../services/product.service';
+import { ImageCompressionService } from '../services/image-compression.service'; // დაამატეთ ეს import
 import { User } from '../models/user.model';
 import { Product } from '../models/product';
 import { MatButtonModule } from '@angular/material/button';
@@ -43,6 +44,7 @@ export class DashboardComponent implements OnInit {
   currentUser: User | null = null;
   productFormVisible: boolean = false;
   isUploading: boolean = false;
+  isCompressing: boolean = false; // კომპრესიის სტატუსი
   userProducts: Product[] = [];
   
   readonly MAX_PRODUCTS_ALLOWED: number = 5;
@@ -78,6 +80,7 @@ export class DashboardComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private productService: ProductService,
+    private imageCompressionService: ImageCompressionService, // დაამატეთ ეს dependency
     private router: Router,
     private snackBar: MatSnackBar,
     private ngZone: NgZone
@@ -155,11 +158,9 @@ export class DashboardComponent implements OnInit {
 
         console.log('Triggering profile file input, Android Chrome:', this.isAndroidChrome);
 
-        // ანდროიდ Chrome-ისთვის განსაკუთრებული მიდგომა
         if (this.isAndroidChrome) {
           this.handleAndroidChromeFileInput(fileInput, 'profile');
         } else {
-          // სტანდარტული მიდგომა სხვა ბრაუზერებისთვის
           this.handleStandardFileInput(fileInput);
         }
 
@@ -184,11 +185,9 @@ export class DashboardComponent implements OnInit {
 
         console.log('Triggering product file input, Android Chrome:', this.isAndroidChrome);
 
-        // ანდროიდ Chrome-ისთვის განსაკუთრებული მიდგომა
         if (this.isAndroidChrome) {
           this.handleAndroidChromeFileInput(fileInput, 'product');
         } else {
-          // სტანდარტული მიდგომა სხვა ბრაუზერებისთვის
           this.handleStandardFileInput(fileInput);
         }
 
@@ -203,14 +202,11 @@ export class DashboardComponent implements OnInit {
   private handleAndroidChromeFileInput(fileInput: HTMLInputElement, type: 'profile' | 'product'): void {
     console.log('Handling Android Chrome file input for:', type);
     
-    // Input-ის სრული რესეტი
     fileInput.value = '';
     fileInput.removeAttribute('value');
     
-    // Touch event simulation for better Android compatibility
     const touchEvents = ['touchstart', 'touchend', 'click'];
     
-    // Multiple attempt strategy
     let attemptCount = 0;
     const maxAttempts = 3;
     
@@ -219,7 +215,6 @@ export class DashboardComponent implements OnInit {
       console.log(`Attempt ${attemptCount} to trigger file input`);
       
       try {
-        // Create and dispatch touch events
         touchEvents.forEach(eventType => {
           const event = new TouchEvent(eventType, {
             bubbles: true,
@@ -231,10 +226,8 @@ export class DashboardComponent implements OnInit {
           fileInput.dispatchEvent(event);
         });
         
-        // Force focus and click
         fileInput.focus();
         
-        // Multiple click attempts with different timings
         setTimeout(() => {
           fileInput.click();
         }, 10);
@@ -253,7 +246,6 @@ export class DashboardComponent implements OnInit {
       }
     };
     
-    // Start the attempt sequence
     requestAnimationFrame(() => {
       attemptClick();
     });
@@ -278,11 +270,9 @@ export class DashboardComponent implements OnInit {
         console.log('Input element:', input);
         console.log('Files found:', input?.files?.length || 0);
         
-        // ანდროიდ Chrome-ში delayed response-ის მოწმება
         if (!input || !input.files || input.files.length === 0) {
           console.warn('No file selected immediately, checking for delayed selection...');
           
-          // Multiple delayed checks for Android Chrome
           const checkDelayedSelection = (attempt: number = 1) => {
             setTimeout(() => {
               console.log(`Delayed check attempt ${attempt}`);
@@ -301,7 +291,6 @@ export class DashboardComponent implements OnInit {
           return;
         }
         
-        // Immediate file processing
         const file = input.files[0];
         console.log('File selected immediately:', file.name);
         this.processSelectedFile(file, type);
@@ -319,8 +308,8 @@ export class DashboardComponent implements OnInit {
     this.onFileSelected(event, type);
   }
 
-  // ფაილის დამუშავება
-  private processSelectedFile(file: File, type: 'profile' | 'product'): void {
+  // ფაილის დამუშავება კომპრესიით
+  private async processSelectedFile(file: File, type: 'profile' | 'product'): Promise<void> {
     console.log('Processing selected file:', {
       name: file.name,
       type: file.type,
@@ -334,48 +323,72 @@ export class DashboardComponent implements OnInit {
       return;
     }
     
-    // ფაილის ზომის შემოწმება (5MB მაქსიმუმ)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      this.showSnackBar('სურათის ზომა არ უნდა აღემატებოდეს 5MB-ს');
-      return;
-    }
-    
     // ცარიელი ფაილის შემოწმება
     if (file.size === 0) {
       this.showSnackBar('არჩეული ფაილი ცარიელია');
       return;
     }
     
-    if (type === 'profile') {
-      this.handleProfileImageSelection(file);
-    } else if (type === 'product') {
-      this.handleProductImageSelection(file);
+    // ძალიან დიდი ფაილების შემოწმება (20MB-ზე მეტი)
+    const maxOriginalSize = 20 * 1024 * 1024;
+    if (file.size > maxOriginalSize) {
+      this.showSnackBar('სურათის ზომა არ უნდა აღემატებოდეს 20MB-ს');
+      return;
+    }
+
+    try {
+      this.isCompressing = true;
+      this.showSnackBar('სურათი მუშავდება...');
+      
+      // კომპრესიის ოფციები
+      const compressionOptions = {
+        maxWidth: type === 'profile' ? 512 : 1920,
+        maxHeight: type === 'profile' ? 512 : 1080,
+        quality: 0.8,
+        maxSizeInMB: type === 'profile' ? 1 : 3,
+        format: 'jpeg' as const
+      };
+
+      console.log(`Starting compression for ${type} image...`);
+      console.log(`Original size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+
+      // სურათის კომპრესია
+      const compressedFile = await this.imageCompressionService.compressImage(file, compressionOptions);
+      
+      console.log(`Compressed size: ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
+      console.log(`Compression ratio: ${((1 - compressedFile.size / file.size) * 100).toFixed(1)}%`);
+      
+      // კომპრესიის მერე დამუშავება
+      if (type === 'profile') {
+        await this.handleProfileImageSelection(compressedFile);
+      } else if (type === 'product') {
+        await this.handleProductImageSelection(compressedFile);
+      }
+      
+    } catch (error) {
+      console.error('Image compression error:', error);
+      this.showSnackBar('სურათის დამუშავებისას დაფიქსირდა შეცდომა');
+    } finally {
+      this.isCompressing = false;
     }
   }
   
-  private handleProfileImageSelection(file: File): void {
+  private async handleProfileImageSelection(file: File): Promise<void> {
     console.log('Processing profile image:', file.name);
     this.isUploading = true;
     
     // პრევიუს სურათის ჩვენება
-    const reader = new FileReader();
-    
-    reader.onload = (e: ProgressEvent<FileReader>) => {
+    try {
+      const previewUrl = await this.createImagePreview(file);
       const previewElement = document.getElementById('profileImagePreview') as HTMLImageElement;
-      if (previewElement && e.target?.result) {
-        previewElement.src = e.target.result as string;
+      if (previewElement) {
+        previewElement.src = previewUrl;
         console.log('Profile image preview updated successfully');
       }
-    };
-    
-    reader.onerror = (error) => {
-      console.error('Error reading profile image file:', error);
-      this.showSnackBar('სურათის წაკითხვისას დაფიქსირდა შეცდომა');
-      this.isUploading = false;
-    };
-    
-    reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error creating profile image preview:', error);
+      this.showSnackBar('სურათის პრევიუს შექმნისას დაფიქსირდა შეცდომა');
+    }
     
     // პროფილის სურათის განახლება
     this.authService.updateProfileImage(file)
@@ -400,28 +413,41 @@ export class DashboardComponent implements OnInit {
       });
   }
   
-  private handleProductImageSelection(file: File): void {
+  private async handleProductImageSelection(file: File): Promise<void> {
     console.log('Processing product image:', file.name);
     this.productImage = file;
     
     // პრევიუს სურათის ჩვენება
-    const reader = new FileReader();
-    
-    reader.onload = (e: ProgressEvent<FileReader>) => {
-      if (e.target?.result) {
-        this.productImagePreview = e.target.result as string;
-        console.log('Product image preview updated successfully');
-      }
-    };
-    
-    reader.onerror = (error) => {
-      console.error('Error reading product image file:', error);
-      this.showSnackBar('პროდუქტის სურათის წაკითხვისას დაფიქსირდა შეცდომა');
+    try {
+      this.productImagePreview = await this.createImagePreview(file);
+      console.log('Product image preview updated successfully');
+    } catch (error) {
+      console.error('Error creating product image preview:', error);
+      this.showSnackBar('პროდუქტის სურათის პრევიუს შექმნისას დაფიქსირდა შეცდომა');
       this.productImage = null;
       this.productImagePreview = null;
-    };
-    
-    reader.readAsDataURL(file);
+    }
+  }
+
+  // სურათის პრევიუს შექმნა
+  private createImagePreview(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (e.target?.result) {
+          resolve(e.target.result as string);
+        } else {
+          reject(new Error('Failed to read file'));
+        }
+      };
+      
+      reader.onerror = (error) => {
+        reject(error);
+      };
+      
+      reader.readAsDataURL(file);
+    });
   }
 
   toggleProductForm(): void {
@@ -436,64 +462,64 @@ export class DashboardComponent implements OnInit {
     }
   }
   
- addProduct(): void {
-  if (this.productForm.invalid) {
-    this.showSnackBar('გთხოვთ შეავსოთ ყველა საჭირო ველი');
-    return;
-  }
-  
-  if (!this.productImage) {
-    this.showSnackBar('გთხოვთ აირჩიოთ პროდუქტის სურათი');
-    return;
-  }
-  
-  if (this.userProducts.length >= this.MAX_PRODUCTS_ALLOWED) {
-    this.showSnackBar(`თქვენ არ შეგიძლიათ ${this.MAX_PRODUCTS_ALLOWED}-ზე მეტი პროდუქტის დამატება`);
-    return;
-  }
-  
-  // ფორმის მნიშვნელობების ლოგირება debug-ისთვის
-  console.log('Form values:', this.productForm.value);
-  console.log('Phone value:', this.productForm.value.phone);
-  console.log('Email value:', this.productForm.value.email);
-  
-  const formData = new FormData();
-  formData.append('title', this.productForm.value.title || '');
-  formData.append('category', this.productForm.value.category || '');
-  formData.append('year', this.productForm.value.year?.toString() || '');
-  formData.append('price', this.productForm.value.price?.toString() || '');
-  formData.append('description', this.productForm.value.description || '');
-  formData.append('location', this.productForm.value.location || '');
-  
-  // ზუსტად ასე გადაეცი phone და email
-  formData.append('phone', this.productForm.value.phone || '');
-  formData.append('email', this.productForm.value.email || '');
-  formData.append('productImage', this.productImage);
+  addProduct(): void {
+    if (this.productForm.invalid) {
+      this.showSnackBar('გთხოვთ შეავსოთ ყველა საჭირო ველი');
+      return;
+    }
+    
+    if (!this.productImage) {
+      this.showSnackBar('გთხოვთ აირჩიოთ პროდუქტის სურათი');
+      return;
+    }
+    
+    if (this.userProducts.length >= this.MAX_PRODUCTS_ALLOWED) {
+      this.showSnackBar(`თქვენ არ შეგიძლიათ ${this.MAX_PRODUCTS_ALLOWED}-ზე მეტი პროდუქტის დამატება`);
+      return;
+    }
+    
+    // ფორმის მნიშვნელობების ლოგირება debug-ისთვის
+    console.log('Form values:', this.productForm.value);
+    console.log('Phone value:', this.productForm.value.phone);
+    console.log('Email value:', this.productForm.value.email);
+    console.log('Product image size:', (this.productImage.size / 1024 / 1024).toFixed(2) + 'MB');
+    
+    const formData = new FormData();
+    formData.append('title', this.productForm.value.title || '');
+    formData.append('category', this.productForm.value.category || '');
+    formData.append('year', this.productForm.value.year?.toString() || '');
+    formData.append('price', this.productForm.value.price?.toString() || '');
+    formData.append('description', this.productForm.value.description || '');
+    formData.append('location', this.productForm.value.location || '');
+    formData.append('phone', this.productForm.value.phone || '');
+    formData.append('email', this.productForm.value.email || '');
+    formData.append('productImage', this.productImage);
 
-  // შეამოწმე რა გადაეცემა formData-ში
-  console.log('FormData content:');
-  for (const [key, value] of formData.entries()) {
-    console.log(`${key}:`, value);
+    // შეამოწმე რა გადაეცემა formData-ში
+    console.log('FormData content:');
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
+
+    this.isUploading = true;
+
+    this.productService.addProduct(formData)
+      .pipe(finalize(() => this.isUploading = false))
+      .subscribe({
+        next: (response) => {
+          console.log('Server response:', response);
+          this.showSnackBar('პროდუქტი წარმატებით დაემატა');
+          this.resetProductForm();
+          this.loadUserProducts();
+          this.productFormVisible = false;
+        },
+        error: (error) => {
+          console.error('პროდუქტის დამატების შეცდომა:', error);
+          this.showSnackBar('პროდუქტის დამატება ვერ მოხერხდა');
+        }
+      });
   }
 
-  this.isUploading = true;
-
-  this.productService.addProduct(formData)
-    .pipe(finalize(() => this.isUploading = false))
-    .subscribe({
-      next: (response) => {
-        console.log('Server response:', response);
-        this.showSnackBar('პროდუქტი წარმატებით დაემატა');
-        this.resetProductForm();
-        this.loadUserProducts();
-        this.productFormVisible = false;
-      },
-      error: (error) => {
-        console.error('პროდუქტის დამატების შეცდომა:', error);
-        this.showSnackBar('პროდუქტის დამატება ვერ მოხერხდა');
-      }
-    });
-}
   deleteProduct(productId: string): void {
     if (confirm('ნამდვილად გსურთ პროდუქტის წაშლა?')) {
       this.productService.deleteProduct(productId).subscribe({
@@ -529,5 +555,10 @@ export class DashboardComponent implements OnInit {
       horizontalPosition: 'center',
       verticalPosition: 'bottom'
     });
+  }
+
+  // კომპრესიის სტატუსის getter
+  get isProcessing(): boolean {
+    return this.isUploading || this.isCompressing;
   }
 }
