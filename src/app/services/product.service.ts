@@ -46,6 +46,7 @@ export class ProductService {
     minPrice?: number,
     maxPrice?: number,
     search?: string
+    city?: string
   }): Observable<any> {
     let params = new HttpParams();
     
@@ -58,6 +59,9 @@ export class ProductService {
       }
       if (filters.maxPrice) {
         params = params.append('maxPrice', filters.maxPrice.toString());
+      }
+      if (filters.city) {
+        params = params.append('city', filters.city);
       }
       if (filters.search) {
         params = params.append('search', filters.search);

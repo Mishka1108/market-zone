@@ -40,6 +40,7 @@ export class PublicProductsComponent implements OnInit {
   // ფილტრების პარამეტრები  
   searchTerm: string = '';
   selectedCategory: string = '';
+  selectedCity: string = '';
   minPrice: number | null = null;
   maxPrice: number | null = null;
   
@@ -51,6 +52,59 @@ export class PublicProductsComponent implements OnInit {
     'ტანსაცმელი',
     'სათამაშოები',
     'კომპიუტერები'
+  ];
+  public cities: string[] = [
+    'თბილისი',
+    'ბათუმი',
+    'ქუთაისი',
+    'რუსთავი',
+    'გორი',
+    'ფოთი',
+    'ზუგდიდი',
+    'თელავი',
+    'ოზურგეთი',
+    'მარნეული',
+    'ახალციხე',
+    'ახალქალაქი',
+    'ბოლნისი',
+    'საგარეჯო',
+    'გარდაბანი',
+    'ცხინვალი',
+    'ჭიათურა',
+    'დუშეთი',
+    'დმანისი',
+    'წალკა',
+    'თეთრიწყარო',
+    'საჩხერე',
+    'ლაგოდეხი',
+    'ყვარელი',
+    'თიანეთი',
+    'კასპი',
+    'ხაშური',
+    'ხობი',
+    'წალენჯიხა',
+    'მესტია',
+    'ამბროლაური',
+    'ცაგერი',
+    'ონი',
+    'ლანჩხუთი',
+    'ჩოხატაური',
+    'ქობულეთი',
+    'სურამი',
+    'აბაშა',
+    'სენაკი',
+    'ტყიბული',
+    'წყალტუბო',
+    'ნინოწმინდა',
+    'ცაგერი',
+    'ბაკურიანი',
+    'გუდაური',
+    'წნორი',
+    'ახმეტა',
+    'ბარნოვი',
+    'ყვარელი',
+    'შორაპანი',
+    'სოხუმი', 
   ];
 
   constructor(
@@ -67,6 +121,10 @@ export class PublicProductsComponent implements OnInit {
         this.selectedCategory = params['category'];
         console.log(`კატეგორია მიღებულია: ${this.selectedCategory}`);
       }
+      if (params['city']) {
+        this.selectedCity = params['city'];
+        console.log(`ქალაქი მიღებულია: ${this.selectedCity}`);
+      }
       this.loadProducts();
     });
   }
@@ -81,7 +139,9 @@ export class PublicProductsComponent implements OnInit {
       filters.category = this.selectedCategory;
       console.log(`ფილტრაცია კატეგორიით: ${this.selectedCategory}`);
     }
-    
+    if (this.selectedCity) {
+      filters.city = this.selectedCity;
+    }
     if (this.minPrice) {
       filters.minPrice = this.minPrice;
     }

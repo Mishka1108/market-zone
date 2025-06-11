@@ -157,14 +157,18 @@
         </mat-error>
       </mat-form-field>
 
-      <mat-form-field class="example-full-width">
-        <mat-label>მდებარეობა</mat-label>
-        <input matInput formControlName="location">
-        <mat-error *ngIf="productForm.controls.location.hasError('required')">
-          მდებარეობა აუცილებელია
+    <mat-form-field class="example-full-width">
+        <mat-label>ქალაქი</mat-label>
+        <input type="text" matInput formControlName="city" [matAutocomplete]="autoCity">
+        <mat-autocomplete #autoCity="matAutocomplete">
+          <mat-option *ngFor="let city of filteredCities" [value]="city">
+            {{ city }}
+          </mat-option>
+        </mat-autocomplete>
+        <mat-error *ngIf="productForm.controls['city'].hasError('required')">
+          ქალაქი აუცილებელია
         </mat-error>
       </mat-form-field>
-
       <!-- პროდუქტის სურათის ატვირთვა -->
       <div class="image-upload-section">
         <h3>პროდუქტის სურათი</h3>
@@ -232,7 +236,7 @@
         <p class="product-category">{{ product.category }}</p>
         <p class="product-price">{{ product.price }} ₾</p>
         <p class="product-year">წელი: {{ product.year }}</p>
-        <p class="product-location">{{ product.location }}</p>
+        <p class="product-location">{{ product.cities }}</p>
         <p class="product-date">დამატებულია: {{ formatDate(product.createdAt) }}</p>
       </div>
       <div class="product-actions">

@@ -9,7 +9,7 @@ export interface Product {
   category: string;
   year: number;
   image: string;
-  location?: string;
+  cities: string;
   phone?: string;
   email?: string;
   

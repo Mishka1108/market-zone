@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { ProductService } from '../services/product.service';
-import { ImageCompressionService } from '../services/image-compression.service'; // დაამატეთ ეს import
+import { ImageCompressionService } from '../services/image-compression.service';
 import { User } from '../models/user.model';
 import { Product } from '../models/product';
 import { MatButtonModule } from '@angular/material/button';
@@ -44,7 +44,7 @@ export class DashboardComponent implements OnInit {
   currentUser: User | null = null;
   productFormVisible: boolean = false;
   isUploading: boolean = false;
-  isCompressing: boolean = false; // კომპრესიის სტატუსი
+  isCompressing: boolean = false;
   userProducts: Product[] = [];
   
   readonly MAX_PRODUCTS_ALLOWED: number = 5;
@@ -55,15 +55,18 @@ export class DashboardComponent implements OnInit {
     year: new FormControl<number | null>(null, [Validators.required, Validators.min(2000), Validators.max(new Date().getFullYear())]),
     price: new FormControl<number | null>(null, [Validators.required, Validators.min(0)]),
     description: new FormControl<string>('', [Validators.required]),
-    location: new FormControl<string>('', [Validators.required]),
     phone: new FormControl<string>('', [Validators.required, Validators.pattern(/^\+?\d{9,15}$/)]),
     email: new FormControl<string>('', [Validators.required, Validators.email]),
+    city: new FormControl<string>('', [Validators.required]) // დამატებული ქალაქის კონტროლი
   });
   
   productImage: File | null = null;
   productImagePreview: string | null = null;
   
+  // კატეგორიებისა და ქალაქების controls
   categoryControl = new FormControl('');
+  cityControl = new FormControl('');
+  
   categories: string[] = [
      'ტელეფონები',
      'ტექნიკა',
@@ -72,15 +75,70 @@ export class DashboardComponent implements OnInit {
      'სათამაშოები',
      'კომპიუტერები',
   ];
+  
   filteredCategories!: string[];
+  filteredCities!: string[];
+  
+  public cities: string[] = [
+    'თბილისი',
+    'ბათუმი',
+    'ქუთაისი',
+    'რუსთავი',
+    'გორი',
+    'ფოთი',
+    'ზუგდიდი',
+    'თელავი',
+    'ოზურგეთი',
+    'მარნეული',
+    'ახალციხე',
+    'ახალქალაქი',
+    'ბოლნისი',
+    'საგარეჯო',
+    'გარდაბანი',
+    'ცხინვალი',
+    'ჭიათურა',
+    'დუშეთი',
+    'დმანისი',
+    'წალკა',
+    'თეთრიწყარო',
+    'საჩხერე',
+    'ლაგოდეხი',
+    'ყვარელი',
+    'თიანეთი',
+    'კასპი',
+    'ხაშური',
+    'ხობი',
+    'წალენჯიხა',
+    'მესტია',
+    'ამბროლაური',
+    'ცაგერი',
+    'ონი',
+    'ლანჩხუთი',
+    'ჩოხატაური',
+    'ქობულეთი',
+    'სურამი',
+    'აბაშა',
+    'სენაკი',
+    'ტყიბული',
+    'წყალტუბო',
+    'ნინოწმინდა',
+    'ცაგერი',
+    'ბაკურიანი',
+    'გუდაური',
+    'წნორი',
+    'ახმეტა',
+    'ბარნოვი',
+    'ყვარელი',
+    'შორაპანი',
+    'სოხუმი', 
+  ];
 
-  // ანდროიდ Chrome detection
   private isAndroidChrome = false;
 
   constructor(
     private authService: AuthService,
     private productService: ProductService,
-    private imageCompressionService: ImageCompressionService, // დაამატეთ ეს dependency
+    private imageCompressionService: ImageCompressionService,
     private router: Router,
     private snackBar: MatSnackBar,
     private ngZone: NgZone
@@ -99,14 +157,25 @@ export class DashboardComponent implements OnInit {
     this.authService.refreshUserData().subscribe();
     this.loadUserProducts();
     
-    this.categoryControl.valueChanges
-    .pipe(
-      startWith(''),
-      map((value: string | null) => (value ? this._filterCategories(value) : this.categories.slice()))
-    )
-    .subscribe((filtered: string[]) => {
-      this.filteredCategories = filtered;
-    });
+    // კატეგორიების ფილტრაცია
+    this.productForm.get('category')?.valueChanges
+      .pipe(
+        startWith(''),
+        map((value: string | null) => (value ? this._filterCategories(value) : this.categories.slice()))
+      )
+      .subscribe((filtered: string[]) => {
+        this.filteredCategories = filtered;
+      });
+
+    // ქალაქების ფილტრაცია
+    this.productForm.get('city')?.valueChanges
+      .pipe(
+        startWith(''),
+        map((value: string | null) => (value ? this._filterCities(value) : this.cities.slice()))
+      )
+      .subscribe((filtered: string[]) => {
+        this.filteredCities = filtered;
+      });
   }
 
   private detectAndroidChrome(): void {
@@ -119,6 +188,13 @@ export class DashboardComponent implements OnInit {
     const filterValue = value.toLowerCase();
     return this.categories.filter(category =>
       category.toLowerCase().includes(filterValue)
+    );
+  }
+
+  private _filterCities(value: string): string[] {
+    const filterValue = value.toLowerCase();
+    return this.cities.filter(city =>
+      city.toLowerCase().includes(filterValue)
     );
   }
   
@@ -144,7 +220,6 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/auth/login']);
   }
 
-  // გამოსწორებული პროფილის ფაილის არჩევა
   triggerFileInput(): void {
     this.ngZone.run(() => {
       try {
@@ -171,7 +246,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // პროდუქტის სურათის არჩევა
   triggerProductImageInput(): void {
     this.ngZone.run(() => {
       try {
@@ -198,7 +272,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // ანდროიდ Chrome-ისთვის სპეციალური მიდგომა
   private handleAndroidChromeFileInput(fileInput: HTMLInputElement, type: 'profile' | 'product'): void {
     console.log('Handling Android Chrome file input for:', type);
     
@@ -251,7 +324,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // სტანდარტული ბრაუზერებისთვის
   private handleStandardFileInput(fileInput: HTMLInputElement): void {
     fileInput.value = '';
     
@@ -260,7 +332,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // ფაილის არჩევის event handler
   onFileSelected(event: Event, type: 'profile' | 'product'): void {
     this.ngZone.run(() => {
       try {
@@ -302,13 +373,11 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // Alternative file selection for Android Chrome (using label)
   onAlternativeFileSelected(event: Event, type: 'profile' | 'product'): void {
     console.log('Alternative file selection triggered for:', type);
     this.onFileSelected(event, type);
   }
 
-  // ფაილის დამუშავება კომპრესიით
   private async processSelectedFile(file: File, type: 'profile' | 'product'): Promise<void> {
     console.log('Processing selected file:', {
       name: file.name,
@@ -317,19 +386,16 @@ export class DashboardComponent implements OnInit {
       lastModified: file.lastModified
     });
     
-    // ფაილის ტიპის შემოწმება
     if (!file.type.startsWith('image/')) {
       this.showSnackBar('გთხოვთ აირჩიოთ მხოლოდ სურათი');
       return;
     }
     
-    // ცარიელი ფაილის შემოწმება
     if (file.size === 0) {
       this.showSnackBar('არჩეული ფაილი ცარიელია');
       return;
     }
     
-    // ძალიან დიდი ფაილების შემოწმება (20MB-ზე მეტი)
     const maxOriginalSize = 20 * 1024 * 1024;
     if (file.size > maxOriginalSize) {
       this.showSnackBar('სურათის ზომა არ უნდა აღემატებოდეს 20MB-ს');
@@ -340,7 +406,6 @@ export class DashboardComponent implements OnInit {
       this.isCompressing = true;
       this.showSnackBar('სურათი მუშავდება...');
       
-      // კომპრესიის ოფციები
       const compressionOptions = {
         maxWidth: type === 'profile' ? 512 : 1920,
         maxHeight: type === 'profile' ? 512 : 1080,
@@ -352,13 +417,11 @@ export class DashboardComponent implements OnInit {
       console.log(`Starting compression for ${type} image...`);
       console.log(`Original size: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
 
-      // სურათის კომპრესია
       const compressedFile = await this.imageCompressionService.compressImage(file, compressionOptions);
       
       console.log(`Compressed size: ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
       console.log(`Compression ratio: ${((1 - compressedFile.size / file.size) * 100).toFixed(1)}%`);
       
-      // კომპრესიის მერე დამუშავება
       if (type === 'profile') {
         await this.handleProfileImageSelection(compressedFile);
       } else if (type === 'product') {
@@ -377,7 +440,6 @@ export class DashboardComponent implements OnInit {
     console.log('Processing profile image:', file.name);
     this.isUploading = true;
     
-    // პრევიუს სურათის ჩვენება
     try {
       const previewUrl = await this.createImagePreview(file);
       const previewElement = document.getElementById('profileImagePreview') as HTMLImageElement;
@@ -390,7 +452,6 @@ export class DashboardComponent implements OnInit {
       this.showSnackBar('სურათის პრევიუს შექმნისას დაფიქსირდა შეცდომა');
     }
     
-    // პროფილის სურათის განახლება
     this.authService.updateProfileImage(file)
       .pipe(finalize(() => this.isUploading = false))
       .subscribe({
@@ -402,7 +463,6 @@ export class DashboardComponent implements OnInit {
           console.error('Profile image update error:', error);
           this.showSnackBar('პროფილის სურათის განახლება ვერ მოხერხდა');
           
-          // Restore previous image if available
           if (this.currentUser?.profileImage) {
             const previewElement = document.getElementById('profileImagePreview') as HTMLImageElement;
             if (previewElement) {
@@ -417,7 +477,6 @@ export class DashboardComponent implements OnInit {
     console.log('Processing product image:', file.name);
     this.productImage = file;
     
-    // პრევიუს სურათის ჩვენება
     try {
       this.productImagePreview = await this.createImagePreview(file);
       console.log('Product image preview updated successfully');
@@ -429,7 +488,6 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  // სურათის პრევიუს შექმნა
   private createImagePreview(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -478,10 +536,10 @@ export class DashboardComponent implements OnInit {
       return;
     }
     
-    // ფორმის მნიშვნელობების ლოგირება debug-ისთვის
     console.log('Form values:', this.productForm.value);
     console.log('Phone value:', this.productForm.value.phone);
     console.log('Email value:', this.productForm.value.email);
+    console.log('City value:', this.productForm.value.city);
     console.log('Product image size:', (this.productImage.size / 1024 / 1024).toFixed(2) + 'MB');
     
     const formData = new FormData();
@@ -490,12 +548,11 @@ export class DashboardComponent implements OnInit {
     formData.append('year', this.productForm.value.year?.toString() || '');
     formData.append('price', this.productForm.value.price?.toString() || '');
     formData.append('description', this.productForm.value.description || '');
-    formData.append('location', this.productForm.value.location || '');
+    formData.append('city', this.productForm.value.city || ''); // ქალაქის დამატება
     formData.append('phone', this.productForm.value.phone || '');
     formData.append('email', this.productForm.value.email || '');
     formData.append('productImage', this.productImage);
 
-    // შეამოწმე რა გადაეცემა formData-ში
     console.log('FormData content:');
     for (const [key, value] of formData.entries()) {
       console.log(`${key}:`, value);
@@ -557,7 +614,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  // კომპრესიის სტატუსის getter
   get isProcessing(): boolean {
     return this.isUploading || this.isCompressing;
   }

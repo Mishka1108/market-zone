@@ -19,6 +19,15 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>ქალაქი</mat-label>
+        <mat-select [(ngModel)]="selectedCity" (selectionChange)="applyFilters()">
+          <mat-option [value]="">ყველა ქალაქი</mat-option>
+          <mat-option *ngFor="let city of cities" [value]="city">
+            {{ city }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
       
       <mat-form-field appearance="outline">
         <mat-label>ფასი (მინ)</mat-label>
