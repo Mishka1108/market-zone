@@ -22,7 +22,8 @@
         }
 
         .dashboard-header h1 {
-            color: white;
+            color:#667eea;
+            font-family: 'Poppins', sans-serif;
             font-size: 2.5rem;
             font-weight: 300;
             text-shadow: 0 2px 4px rgba(0,0,0,0.3);
@@ -292,8 +293,10 @@
             padding: 40px;
             border: 1px solid rgba(255,255,255,0.2);
         }
+        
 
         .card3 h2 {
+            display: flex;
             text-align: center;
             color: #2d3748;
             font-size: 1.8rem;
@@ -303,8 +306,11 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+        }      
+        .card4{
+            display: flex;
+            flex-direction: column;
         }
-
         .image-upload-area {
             width: 200px;
             height: 200px;
