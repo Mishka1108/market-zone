@@ -19,15 +19,20 @@
           </mat-option>
         </mat-select>
       </mat-form-field>
-      <mat-form-field appearance="outline">
-        <mat-label>ქალაქი</mat-label>
-        <mat-select [(ngModel)]="selectedCity" (selectionChange)="applyFilters()">
-          <mat-option [value]="">ყველა ქალაქი</mat-option>
-          <mat-option *ngFor="let city of cities" [value]="city">
-            {{ city }}
-          </mat-option>
-        </mat-select>
-      </mat-form-field>
+     <mat-form-field appearance="outline">
+  <mat-label>ქალაქი</mat-label>
+  <input type="text" 
+         matInput 
+         [matAutocomplete]="auto" 
+         [(ngModel)]="selectedCity"
+         (ngModelChange)="applyFilters()" />
+  <mat-autocomplete #auto="matAutocomplete" autoActiveFirstOption>
+    <mat-option [value]="">ყველა ქალაქი</mat-option>
+    <mat-option *ngFor="let city of filteredCities" [value]="city">
+      {{ city }}
+    </mat-option>
+  </mat-autocomplete>
+</mat-form-field>
       
       <mat-form-field appearance="outline">
         <mat-label>ფასი (მინ)</mat-label>

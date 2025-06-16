@@ -13,6 +13,7 @@ import { ProductService } from '../services/product.service';
 import { Product } from '../models/product';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { User } from '../models/user.model';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 
 @Component({
   selector: 'app-public-products',
@@ -27,7 +28,8 @@ import { User } from '../models/user.model';
     MatIconModule,
     MatProgressSpinnerModule,
     FormsModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatAutocompleteModule
   ],
   templateUrl: './public-products.component.html',
   styleUrls: ['./public-products.component.scss']
@@ -43,7 +45,7 @@ export class PublicProductsComponent implements OnInit {
   selectedCity: string = '';
   minPrice: number | null = null;
   maxPrice: number | null = null;
-  
+  filteredCities: string[] = [];
   // კატეგორიების სია
   categories: string[] = [
     'ტელეფონები',
@@ -127,6 +129,7 @@ export class PublicProductsComponent implements OnInit {
       }
       this.loadProducts();
     });
+    this.filterCities();
   }
 
   // პროდუქტების ჩატვირთვა ფილტრებით ან ფილტრების გარეშე
@@ -211,12 +214,18 @@ export class PublicProductsComponent implements OnInit {
   // ფილტრების გამოყენება
   applyFilters(): void {
     this.loadProducts();
+    this.filterCities();
   }
 
   // ძიების გასუფთავება
   clearSearch(): void {
     this.searchTerm = '';
     this.applyFilters();
+  }
+
+  filterCities():void{
+const search=this.selectedCity?.toLowerCase();
+this.filteredCities=this.cities.filter(city=>city.toLowerCase().includes(search));
   }
 
   // ფილტრების გასუფთავება
