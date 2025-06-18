@@ -71,7 +71,7 @@ export class RegisterComponent {
     }).subscribe({
       next: (response) => {
         this.isSubmitting = false;
-        this.successMessage = response.message || 'რეგისტრაცია წარმატებით დასრულდა. გთხოვთ შეამოწმოთ თქვენი ელფოსტა ვერიფიკაციისთვის.(თუ ვერიფიკაცია არ მოხდა, გთხოვთ შეამოწმოთ სპამი)';
+        this.successMessage = 'რეგისტრაცია წარმატებით დასრულდა. გთხოვთ შეამოწმოთ თქვენი ელფოსტა ვერიფიკაციისთვის.(თუ ვერიფიკაცია არ მოხდა, გთხოვთ შეამოწმოთ სპამი)';
         this.registerForm.reset();
       },
       error: (error) => {
