@@ -10,9 +10,9 @@ import { MatIconModule } from '@angular/material/icon';
   styleUrl: './footer.component.scss'
 })
 export class FooterComponent {
-public currentYear: number = new Date().getFullYear();
+// public currentYear: number = new Date().getFullYear();
 
-//  currentYear = new Date().getFullYear();
+ currentYear = new Date().getFullYear();
 
   constructor() {}
 
