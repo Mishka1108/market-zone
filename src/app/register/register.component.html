@@ -94,7 +94,7 @@
   [ngClass]="{'is-invalid': registerForm.get('personalNumber')?.invalid && registerForm.get('personalNumber')?.touched}"
 >
 
-        >
+        
         <div *ngIf="registerForm.get('personalNumber')?.invalid && registerForm.get('personalNumber')?.touched" class="invalid-feedback">
           <div *ngIf="registerForm.get('personalNumber')?.errors?.['required']">პირადი ნომრის შეყვანა სავალდებულოა</div>
           <div *ngIf="registerForm.get('personalNumber')?.errors?.['pattern']">გთხოვთ შეიყვანოთ სწორი ფორმატის პირადი ნომდერი</div>
