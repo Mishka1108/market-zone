@@ -5,6 +5,8 @@
     
     <div *ngIf="successMessage" class="alert alert-success">
       {{ successMessage }}
+      <button class="btnlink"  mat-flat-button (click)="openGmail()" >ლინკზე გადასვლა</button>
+
     </div>
     
     <div *ngIf="errorMessage" class="alert alert-danger">
