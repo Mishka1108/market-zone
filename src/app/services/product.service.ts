@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
-import { tap, map } from 'rxjs/operators';
+import { HttpClient, HttpHeaders, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { tap, map, catchError, retry, timeout } from 'rxjs/operators';
 import { Product } from '../models/product';
 import { environment } from '../environment';
 
@@ -11,36 +11,103 @@ import { environment } from '../environment';
 export class ProductService {
   private baseUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) { 
+    console.log('ProductService initialized with baseUrl:', this.baseUrl);
+  }
 
   // ავთენტიფიკაციის ტოკენის მიღება
   private getHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
-    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    let headers = new HttpHeaders();
+    
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    headers = headers.set('Content-Type', 'application/json');
+    headers = headers.set('Accept', 'application/json');
+    
+    return headers;
   }
 
-  // პროდუქტის დამატება (მხოლოდ ავტორიზებული მომხმარებლისთვის)
+  // FormData-სთვის სპეციალური headers
+  private getFormDataHeaders(): HttpHeaders {
+    const token = localStorage.getItem('token');
+    let headers = new HttpHeaders();
+    
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    
+    headers = headers.set('Accept', 'application/json');
+    
+    return headers;
+  }
+
+  // Error handling method
+  private handleError(error: HttpErrorResponse): Observable<never> {
+    console.error('HTTP Error:', error);
+    
+    let errorMessage = 'უცნობი შეცდომა';
+    
+    if (error.status === 0) {
+      errorMessage = 'ქსელის შეცდომა - შეამოწმეთ ინტერნეტი და სერვერის მდგომარეობა';
+    } else if (error.status === 401) {
+      errorMessage = 'ავტორიზაციის შეცდომა';
+    } else if (error.status === 403) {
+      errorMessage = 'წვდომა აკრძალულია';
+    } else if (error.status === 404) {
+      errorMessage = 'რესურსი ვერ მოიძებნა';
+    } else if (error.status === 500) {
+      errorMessage = 'სერვერის შეცდომა';
+    } else if (error.error && error.error.message) {
+      errorMessage = error.error.message;
+    }
+    
+    return throwError(() => new Error(errorMessage));
+  }
+
+  // პროდუქტის დამატება
   addProduct(productData: FormData): Observable<any> {
+    console.log('პროდუქტის დამატება იწყება...');
+    console.log('API URL:', `${this.baseUrl}/products`);
+    
     return this.http.post(`${this.baseUrl}/products`, productData, {
-      headers: this.getHeaders()
-    });
+      headers: this.getFormDataHeaders()
+    }).pipe(
+      timeout(30000),
+      retry(1),
+      catchError(this.handleError),
+      tap((response: any) => {
+        console.log('პროდუქტი წარმატებით დაემატა:', response);
+      })
+    );
   }
 
-  // მომხმარებლის პროდუქტების მიღება (მხოლოდ ავტორიზებული მომხმარებლისთვის)
+  // მომხმარებლის პროდუქტების მიღება
   getUserProducts(): Observable<any> {
+    console.log('მომხმარებლის პროდუქტების მიღება...');
     return this.http.get(`${this.baseUrl}/products/user`, {
       headers: this.getHeaders()
-    });
+    }).pipe(
+      timeout(10000),
+      retry(1),
+      catchError(this.handleError)
+    );
   }
 
-  // პროდუქტის წაშლა (მხოლოდ ავტორიზებული მომხმარებლისთვის)
+  // პროდუქტის წაშლა
   deleteProduct(productId: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/products/${productId}`, {
       headers: this.getHeaders()
-    });
+    }).pipe(
+      timeout(10000),
+      retry(1),
+      catchError(this.handleError)
+    );
   }
 
-  // ყველა პროდუქტის მიღება (საჯაროდ ხელმისაწვდომი) - გაუმჯობესებული
+  // ყველა პროდუქტის მიღება
   getAllProducts(filters?: {
     category?: string,
     minPrice?: number,
@@ -51,94 +118,79 @@ export class ProductService {
     let params = new HttpParams();
     
     if (filters) {
-      if (filters.category) {
-        params = params.append('category', filters.category);
-      }
-      if (filters.minPrice) {
-        params = params.append('minPrice', filters.minPrice.toString());
-      }
-      if (filters.maxPrice) {
-        params = params.append('maxPrice', filters.maxPrice.toString());
-      }
-      if (filters.city) {
-        params = params.append('city', filters.city);
-      }
-      if (filters.search) {
-        params = params.append('search', filters.search);
-      }
+      if (filters.category) params = params.append('category', filters.category);
+      if (filters.minPrice) params = params.append('minPrice', filters.minPrice.toString());
+      if (filters.maxPrice) params = params.append('maxPrice', filters.maxPrice.toString());
+      if (filters.city) params = params.append('city', filters.city);
+      if (filters.search) params = params.append('search', filters.search);
     }
     
-    // საჯარო მოთხოვნა - არ გამოიყენოს headers
-    return this.http.get(`${this.baseUrl}/products`, { params });
+    return this.http.get(`${this.baseUrl}/products`, { 
+      params,
+      headers: this.getHeaders()
+    }).pipe(
+      timeout(10000),
+      retry(1),
+      catchError(this.handleError)
+    );
   }
 
-  // ალტერნატიული მეთოდი საჯარო პროდუქტებისთვის
-  getAllPublicProducts(filters?: {
-    category?: string,
-    minPrice?: number,
-    maxPrice?: number,
-    search?: string
-  }): Observable<any> {
-    let params = new HttpParams();
-    
-    if (filters) {
-      Object.keys(filters).forEach(key => {
-        const value = filters[key as keyof typeof filters];
-        if (value !== undefined && value !== null && value !== '') {
-          params = params.append(key, value.toString());
-        }
-      });
-    }
-    
-    // სპეციალური endpoint საჯარო პროდუქტებისთვის (თუ backend-ზე არსებობს)
-    return this.http.get(`${this.baseUrl}/products/public`, { params })
-      .pipe(
-        tap((response: any) => {
-          console.log('საჯარო პროდუქტები ჩაიტვირთა:', response);
-        })
-      );
+  // კონექციის შემოწმება - შეცვალე endpoint
+  checkConnection(): Observable<any> {
+    console.log('კონექციის შემოწმება:', `${this.baseUrl}/health`);
+    return this.http.get(`${this.baseUrl}/health`, {
+      headers: new HttpHeaders({
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      })
+    }).pipe(
+      timeout(5000),
+      catchError((error) => {
+        console.error('კონექციის შეცდომა:', error);
+        return this.handleError(error);
+      })
+    );
   }
 
-  // გაუმჯობესებული getProductById მეთოდი
+  // პროდუქტის ID-ით მიღება
   getProductById(productId: string): Observable<any> {
     console.log(`მოითხოვება პროდუქტი ID-ით: ${productId}`);
-    return this.http.get(`${this.baseUrl}/products/${productId}`).pipe(
+    return this.http.get(`${this.baseUrl}/products/${productId}`, {
+      headers: this.getHeaders()
+    }).pipe(
+      timeout(10000),
+      retry(1),
+      catchError(this.handleError),
       tap((response: any) => {
         console.log('API-დან მიღებული რო პასუხი:', response);
       }),
       map((response: any) => {
-        // განვსაზღვროთ პროდუქტის ობიექტი
         let product = response.product || response;
         
         console.log('დამუშავებამდე პროდუქტი:', product);
         
-        // ყველა შესაძლო მომხმარებლის კონტაქტის წყაროს შემოწმება
+        // კონტაქტის ინფორმაციის დამუშავება
         const contactSources = [
-          // პირდაპირ პროდუქტის ლეველზე
           {
             email: product.email,
             phone: product.phone,
             name: product.userName
           },
-          // user ობიექტიდან
           {
             email: product.user?.email,
             phone: product.user?.phone,
             name: product.user?.name || product.user?.firstName
           },
-          // seller ობიექტიდან
           {
             email: product.seller?.email || product.sellerEmail,
             phone: product.seller?.phone || product.sellerPhone,
             name: product.seller?.name || product.seller?.firstName || product.sellerName
           },
-          // owner ობიექტიდან
           {
             email: product.owner?.email,
             phone: product.owner?.phone,
             name: product.owner?.name || product.owner?.firstName
           },
-          // userEmail, userPhone ცვლადებიდან
           {
             email: product.userEmail,
             phone: product.userPhone,
@@ -146,60 +198,46 @@ export class ProductService {
           }
         ];
         
-        // ვიპოვოთ პირველი ვალიდური კონტაქტი
-        let finalContact = {
-          email: '',
-          phone: '',
-          name: ''
-        };
+        let finalContact = { email: '', phone: '', name: '' };
         
         for (const source of contactSources) {
-          if (!finalContact.email && source.email) {
-            finalContact.email = source.email;
-          }
-          if (!finalContact.phone && source.phone) {
-            finalContact.phone = source.phone;
-          }
-          if (!finalContact.name && source.name) {
-            finalContact.name = source.name;
-          }
+          if (!finalContact.email && source.email) finalContact.email = source.email;
+          if (!finalContact.phone && source.phone) finalContact.phone = source.phone;
+          if (!finalContact.name && source.name) finalContact.name = source.name;
           
-          // თუ ყველა საჭირო ინფორმაცია მოიძებნა, შევწყვიტოთ
-          if (finalContact.email && finalContact.phone && finalContact.name) {
-            break;
-          }
+          if (finalContact.email && finalContact.phone && finalContact.name) break;
         }
         
-        // პროდუქტს დავუმატოთ საბოლოო კონტაქტი
         product.email = finalContact.email || 'არ არის მითითებული';
         product.phone = finalContact.phone || 'არ არის მითითებული';
         product.userName = finalContact.name || 'არ არის მითითებული';
         
-        // დამატებითი ლოგი დებაგისთვის
         console.log('საბოლოო კონტაქტი:', finalContact);
-        console.log('დამუშავების შემდეგ პროდუქტი:', {
-          email: product.email,
-          phone: product.phone,
-          userName: product.userName,
-          title: product.title
-        });
         
-        // დავაბრუნოთ სწორი სტრუქტურა
         return response.product ? { product } : product;
-      }),
-      tap((finalResponse: any) => {
-        console.log('საბოლოო პასუხი რომელიც დაბრუნება:', finalResponse);
       })
     );
   }
 
-  // კატეგორიების მიღება (საჯარო)
+  // კატეგორიების მიღება
   getCategories(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.baseUrl}/products/categories`);
+    return this.http.get<string[]>(`${this.baseUrl}/products/categories`, {
+      headers: this.getHeaders()
+    }).pipe(
+      timeout(5000),
+      retry(1),
+      catchError(this.handleError)
+    );
   }
 
-  // სტატისტიკის მიღება (საჯარო)
+  // სტატისტიკის მიღება
   getProductStats(): Observable<any> {
-    return this.http.get(`${this.baseUrl}/products/stats`);
+    return this.http.get(`${this.baseUrl}/products/stats`, {
+      headers: this.getHeaders()
+    }).pipe(
+      timeout(5000),
+      retry(1),
+      catchError(this.handleError)
+    );
   }
 }

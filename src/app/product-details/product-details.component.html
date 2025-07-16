@@ -1,61 +1,165 @@
-
 <div class="product-details-container">
-  <div class="loading" *ngIf="isLoading">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>იტვირთება პროდუქტის დეტალები...</p>
+  <!-- Loading State -->
+  <div class="loading-container" *ngIf="isLoading">
+    <mat-spinner diameter="60"></mat-spinner>
+    <p class="loading-text">იტვირთება პროდუქტის დეტალები...</p>
   </div>
   
-  <div class="error-message" *ngIf="!isLoading && error">
-    <p>{{ error }}</p>
-    <button mat-raised-button color="primary" (click)="goBack()">უკან დაბრუნება</button>
+  <!-- Error State -->
+  <div class="error-container" *ngIf="!isLoading && error">
+    <mat-icon class="error-icon">error_outline</mat-icon>
+    <h2 class="error-title">შეცდომა</h2>
+    <p class="error-message">{{ error }}</p>
+    <button mat-raised-button color="primary" (click)="goBack()" class="error-button">
+      <mat-icon>arrow_back</mat-icon>
+      უკან დაბრუნება
+    </button>
   </div>
   
-  <mat-card class="product-card" *ngIf="!isLoading && product && !error">
-    <div class="back-button">
-      <button mat-icon-button (click)="goBack()">
+  <!-- Product Details -->
+  <div class="product-wrapper" *ngIf="!isLoading && product && !error">
+    <!-- Header with Back Button -->
+    <div class="product-header">
+      <button mat-icon-button (click)="goBack()" class="back-button">
         <mat-icon>arrow_back</mat-icon>
       </button>
+      <h1 class="page-title">პროდუქტის დეტალები</h1>
     </div>
-    
+
     <div class="product-content">
-      <div class="product-image-container">
-        <img [src]="product.image" alt="{{ product.title }}" class="product-image">
+      <!-- Image Gallery Section with Swiper -->
+      <div class="image-gallery-section">
+        <div class="swiper-container">
+          <!-- Main Image Swiper -->
+          <swiper-container 
+            class="main-swiper"
+            slides-per-view="1"
+            space-between="10"
+            loop="productImages.length > 1"
+            navigation="true"
+            pagination="{ clickable: true }"
+            
+            >
+            <swiper-slide *ngFor="let image of productImages; let i = index">
+              <div class="main-image-container">
+                <img 
+                  [src]="image" 
+                  [alt]="product.title + ' - სურათი ' + (i + 1)" 
+                  class="main-image"
+                  (error)="onImageError($event)"
+                  class="main-image"
+                  />
+              </div>
+            </swiper-slide>
+          </swiper-container>
+
+          <!-- Thumbnail Swiper -->
+        
+        </div>
       </div>
 
-      <!-- პროდუქტის ძირითადი ინფორმაცია - ყოველთვის ჩნდება -->
-      <div class="product-meta">
-        <h1 class="product-title">{{ product.title }}</h1>
-        <p class="category">კატეგორია: {{ product.category || 'არ არის მითითებული' }}</p>
-        <p class="year">გამოშვების წელი: {{ product.year || 'არ არის მითითებული' }}</p>
-        <p class="price">პროდუქტის ფასი: {{ product.price }}₾</p>
-        <p class="description">აღწერა: {{ product.description || 'არ არის მითითებული' }}</p>
-        <p class="location">ადგილმდებარეობა: {{ product.cities || 'არ არის მითითებული' }}</p>
-        
-        <!-- გაუმჯობესებული კონტაქტის ინფორმაცია -->
-        <div class="seller-info-section">
-          <p class="seller-info">გამყიდველის ინფორმაცია:</p>
-          <p class="seller-name">სახელი: {{ product.userName || 'არ არის მითითებული' }}</p>
-          <p class="seller-phone">ტელეფონი: {{ product.phone || 'არ არის მითითებული' }}</p>
-          <p class="seller-email">ელ. ფოსტა: {{ product.email || 'არ არის მითითებული' }}</p>
-        </div>
+      <!-- Product Info Section -->
+      <div class="product-info-section">
+        <mat-card class="product-card">
+          <mat-card-header>
+            <mat-card-title class="product-title">{{ product.title }}</mat-card-title>
+            <mat-card-subtitle class="product-price">{{ formatPrice(product.price) }}</mat-card-subtitle>
+          </mat-card-header>
 
-        <!-- კონტაქტის ღილაკები -->
-        <div class="contact-buttons">
-          <button mat-raised-button color="primary" 
-                  *ngIf="product.phone && product.phone !== 'არ არის მითითებული'"
-                  (click)="callPhone()">
-            <mat-icon>phone</mat-icon>
-            დარეკვა
-          </button>
-          
-          <button mat-raised-button color="accent"
-                  *ngIf="product.email && product.email !== 'არ არის მითითებული'"
-                  (click)="sendEmail()">
-            <mat-icon>email</mat-icon>
-            იმეილის გაგზავნა
-          </button>
-        </div>
+          <mat-card-content>
+            <!-- Basic Info -->
+            <div class="info-section">
+              <h3 class="section-title">
+                <mat-icon>info</mat-icon>
+                ძირითადი ინფორმაცია
+              </h3>
+              
+              <div class="info-grid">
+                <div class="info-item" *ngIf="product.category">
+                  <mat-chip class="info-chip">
+                    <mat-icon matChipAvatar>category</mat-icon>
+                    {{ product.category }}
+                  </mat-chip>
+                </div>
+                
+                <div class="info-item" *ngIf="product.year">
+                  <mat-chip class="info-chip">
+                    <mat-icon matChipAvatar>calendar_today</mat-icon>
+                    {{ product.year }}
+                  </mat-chip>
+                </div>
+                
+                <div class="info-item" *ngIf="product.cities">
+                  <mat-chip class="info-chip">
+                    <mat-icon matChipAvatar>location_on</mat-icon>
+                    {{ product.cities }}
+                  </mat-chip>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="info-section" *ngIf="product.description">
+              <h3 class="section-title">
+                <mat-icon>description</mat-icon>
+                აღწერა
+              </h3>
+              <p class="description-text">{{ product.description }}</p>
+            </div>
+
+            <!-- Seller Info -->
+            <div class="info-section seller-section">
+              <h3 class="section-title">
+                <mat-icon>person</mat-icon>
+                გამყიდველის ინფორმაცია
+              </h3>
+              
+              <div class="seller-info">
+                <div class="seller-detail" *ngIf="product.userName">
+                  <mat-icon class="seller-icon">account_circle</mat-icon>
+                  <span class="seller-label">სახელი:</span>
+                  <span class="seller-value">{{ product.userName }}</span>
+                </div>
+                
+                <div class="seller-detail" *ngIf="product.phone && product.phone !== 'არ არის მითითებული'">
+                  <mat-icon class="seller-icon">phone</mat-icon>
+                  <span class="seller-label">ტელეფონი:</span>
+                  <span class="seller-value">{{ product.phone }}</span>
+                </div>
+                
+                <div class="seller-detail" *ngIf="product.email && product.email !== 'არ არის მითითებული'">
+                  <mat-icon class="seller-icon">email</mat-icon>
+                  <span class="seller-label">ელ. ფოსტა:</span>
+                  <span class="seller-value">{{ product.email }}</span>
+                </div>
+              </div>
+            </div>
+          </mat-card-content>
+
+          <!-- Contact Actions -->
+          <mat-card-actions class="contact-actions">
+            <button 
+              mat-raised-button 
+              color="primary" 
+              class="contact-button"
+              *ngIf="product.phone && product.phone !== 'არ არის მითითებული'"
+              (click)="callPhone()">
+              <mat-icon>phone</mat-icon>
+              <span>დარეკვა</span>
+            </button>
+            
+            <button 
+              mat-raised-button 
+              color="accent"
+              class="contact-button"
+              *ngIf="product.email && product.email !== 'არ არის მითითებული'"
+              (click)="sendEmail()">
+              <mat-icon>email</mat-icon>
+              <span>იმეილი</span>
+            </button>
+          </mat-card-actions>
+        </mat-card>
       </div>
     </div>
-  </mat-card>
+  </div>
 </div>

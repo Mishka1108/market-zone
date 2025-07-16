@@ -57,33 +57,47 @@
     flex-wrap: wrap;
     gap: 20px;
  
-  .card6 {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-size: 18px;
-    font-weight: bold;
-    background: white;
-    border: 1px solid #aaa;
-    height: 350px;
-    gap: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);  /* Add some shadow for better appearance */
-    padding: 15px;  /* Space inside the card */
-    transition: transform 0.3s ease-in-out;  /* Add smooth scaling on hover */
-  }
+.card6 {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* ეს უკვე არის თქვენს კოდში */
+  justify-content: center; /* ამ ხაზის დამატება */
+  font-size: 18px;
+  font-weight: bold;
+  background: white;
+  border: 1px solid #aaa;
+  height: 350px;
+  gap: 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  transition: transform 0.3s ease-in-out;
+}
 
   .card6:hover {
     transform: scale(1.05);  /* Slightly enlarge card on hover */
   }
+swiper-container {
+  width: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* ამ ხაზის დამატება */
+}
+
+/* ან თუ გსურთ სურათები თავისთავად იყოს ცენტრში */
+swiper-slide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
   img {
-    margin-top: 10px;
-    width: 150px;
-    height: 175px;
-    border-radius: 8px;
-    object-fit: cover;  /* Ensures image aspect ratio is maintained */
-  }
+  margin-top: 10px;
+  width: 150px;
+  height: 175px;
+  border-radius: 8px;
+  object-fit: cover;
+}
 
   .name {
     font-size: 15px;

@@ -1,4 +1,5 @@
-import { Component, OnInit, ViewChild, ElementRef, NgZone } from '@angular/core';
+// dashboard.component.ts
+import { Component, OnInit, ViewChild, ElementRef, NgZone, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
@@ -8,7 +9,8 @@ import { User } from '../models/user.model';
 import { Product } from '../models/product';
 import { MatButtonModule } from '@angular/material/button';
 import { HttpClientModule } from '@angular/common/http';
-import { finalize } from 'rxjs/operators';
+import { finalize, catchError, timeout, retry } from 'rxjs/operators';
+import { of } from 'rxjs';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -36,18 +38,25 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class DashboardComponent implements OnInit {
   @ViewChild('profileInput', { static: false }) profileInputRef!: ElementRef<HTMLInputElement>;
-  @ViewChild('productInput', { static: false }) productInputRef!: ElementRef<HTMLInputElement>;
+  @ViewChild('productInput1', { static: false }) productInput1Ref!: ElementRef<HTMLInputElement>;
+  @ViewChild('productInput2', { static: false }) productInput2Ref!: ElementRef<HTMLInputElement>;
+  @ViewChild('productInput3', { static: false }) productInput3Ref!: ElementRef<HTMLInputElement>;
 
   currentUser: User | null = null;
   productFormVisible: boolean = false;
   isUploading: boolean = false;
   isCompressing: boolean = false;
   userProducts: Product[] = [];
+
+  
+  
   
   readonly MAX_PRODUCTS_ALLOWED: number = 5;
+  readonly MAX_PRODUCT_IMAGES: number = 3;
   
   productForm = new FormGroup({
     title: new FormControl<string>('', [Validators.required]),
@@ -57,16 +66,21 @@ export class DashboardComponent implements OnInit {
     description: new FormControl<string>('', [Validators.required]),
     phone: new FormControl<string>('', [Validators.required, Validators.pattern(/^\+?\d{9,15}$/)]),
     email: new FormControl<string>('', [Validators.required, Validators.email]),
-    city: new FormControl<string>('', [Validators.required]) // დამატებული ქალაქის კონტროლი
+    city: new FormControl<string>('', [Validators.required])
   });
   
-  productImage: File | null = null;
-  productImagePreview: string | null = null;
+  // მრავალი სურათისთვის arrays
+  productImages: (File | null)[] = [null, null, null];
+  productImagePreviews: (string | null)[] = [null, null, null];
   
   // კატეგორიებისა და ქალაქების controls
   categoryControl = new FormControl('');
   cityControl = new FormControl('');
   
+
+  filteredCategories: string[] = [];
+  filteredCities: string[] = [];
+
   categories: string[] = [
      'ტელეფონები',
      'ტექნიკა',
@@ -76,8 +90,6 @@ export class DashboardComponent implements OnInit {
      'კომპიუტერები',
   ];
   
-  filteredCategories!: string[];
-  filteredCities!: string[];
   
   public cities: string[] = [
     'თბილისი',
@@ -198,16 +210,24 @@ export class DashboardComponent implements OnInit {
     );
   }
   
+  // გაუმჯობესებული loadUserProducts მეთოდი
   loadUserProducts(): void {
-    this.productService.getUserProducts().subscribe({
-      next: (response) => {
-        this.userProducts = response.products;
-      },
-      error: (error) => {
-        console.error('პროდუქტების ჩატვირთვის შეცდომა:', error);
-        this.showSnackBar('პროდუქტების ჩატვირთვა ვერ მოხერხდა');
-      }
-    });
+    this.productService.getUserProducts()
+      .pipe(
+        timeout(10000),
+        retry(1),
+        catchError((error) => {
+          console.error('პროდუქტების ჩატვირთვის შეცდომა:', error);
+          this.showSnackBar('პროდუქტების ჩატვირთვა ვერ მოხერხდა: ' + error.message);
+          return of({ products: [] });
+        })
+      )
+      .subscribe({
+        next: (response) => {
+          this.userProducts = response.products;
+          console.log('მომხმარებლის პროდუქტები ჩაიტვირთა:', this.userProducts.length);
+        }
+      });
   }
   
   formatDate(date: string | Date | undefined): string {
@@ -246,34 +266,34 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  triggerProductImageInput(): void {
+  triggerProductImageInput(imageIndex: number): void {
     this.ngZone.run(() => {
       try {
-        const fileInput = document.getElementById('productImageInput') as HTMLInputElement;
+        const fileInput = document.getElementById(`productImageInput${imageIndex + 1}`) as HTMLInputElement;
         
         if (!fileInput) {
-          console.error('Product image input not found');
+          console.error(`Product image input ${imageIndex + 1} not found`);
           this.showSnackBar('ფაილის არჩევის ველი ვერ მოიძებნა');
           return;
         }
 
-        console.log('Triggering product file input, Android Chrome:', this.isAndroidChrome);
+        console.log(`Triggering product file input ${imageIndex + 1}, Android Chrome:`, this.isAndroidChrome);
 
         if (this.isAndroidChrome) {
-          this.handleAndroidChromeFileInput(fileInput, 'product');
+          this.handleAndroidChromeFileInput(fileInput, 'product', imageIndex);
         } else {
           this.handleStandardFileInput(fileInput);
         }
 
       } catch (error) {
-        console.error('Error triggering product file input:', error);
+        console.error(`Error triggering product file input ${imageIndex + 1}:`, error);
         this.showSnackBar('ფაილის არჩევისას დაფიქსირდა შეცდომა');
       }
     });
   }
 
-  private handleAndroidChromeFileInput(fileInput: HTMLInputElement, type: 'profile' | 'product'): void {
-    console.log('Handling Android Chrome file input for:', type);
+  private handleAndroidChromeFileInput(fileInput: HTMLInputElement, type: 'profile' | 'product', imageIndex?: number): void {
+    console.log('Handling Android Chrome file input for:', type, imageIndex !== undefined ? `index: ${imageIndex}` : '');
     
     fileInput.value = '';
     fileInput.removeAttribute('value');
@@ -332,12 +352,12 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  onFileSelected(event: Event, type: 'profile' | 'product'): void {
+  onFileSelected(event: Event, type: 'profile' | 'product', imageIndex?: number): void {
     this.ngZone.run(() => {
       try {
         const input = event.target as HTMLInputElement;
         
-        console.log('File selection event triggered for:', type);
+        console.log('File selection event triggered for:', type, imageIndex !== undefined ? `index: ${imageIndex}` : '');
         console.log('Input element:', input);
         console.log('Files found:', input?.files?.length || 0);
         
@@ -349,7 +369,7 @@ export class DashboardComponent implements OnInit {
               console.log(`Delayed check attempt ${attempt}`);
               if (input?.files && input.files.length > 0) {
                 console.log('Delayed file detection successful:', input.files[0].name);
-                this.processSelectedFile(input.files[0], type);
+                this.processSelectedFile(input.files[0], type, imageIndex);
               } else if (attempt < 5) {
                 checkDelayedSelection(attempt + 1);
               } else {
@@ -364,7 +384,7 @@ export class DashboardComponent implements OnInit {
         
         const file = input.files[0];
         console.log('File selected immediately:', file.name);
-        this.processSelectedFile(file, type);
+        this.processSelectedFile(file, type, imageIndex);
         
       } catch (error) {
         console.error('Error in file selection handler:', error);
@@ -373,17 +393,18 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  onAlternativeFileSelected(event: Event, type: 'profile' | 'product'): void {
-    console.log('Alternative file selection triggered for:', type);
-    this.onFileSelected(event, type);
+  onAlternativeFileSelected(event: Event, type: 'profile' | 'product', imageIndex?: number): void {
+    console.log('Alternative file selection triggered for:', type, imageIndex !== undefined ? `index: ${imageIndex}` : '');
+    this.onFileSelected(event, type, imageIndex);
   }
 
-  private async processSelectedFile(file: File, type: 'profile' | 'product'): Promise<void> {
+  private async processSelectedFile(file: File, type: 'profile' | 'product', imageIndex?: number): Promise<void> {
     console.log('Processing selected file:', {
       name: file.name,
       type: file.type,
       size: file.size,
-      lastModified: file.lastModified
+      lastModified: file.lastModified,
+      imageIndex: imageIndex
     });
     
     if (!file.type.startsWith('image/')) {
@@ -424,8 +445,8 @@ export class DashboardComponent implements OnInit {
       
       if (type === 'profile') {
         await this.handleProfileImageSelection(compressedFile);
-      } else if (type === 'product') {
-        await this.handleProductImageSelection(compressedFile);
+      } else if (type === 'product' && imageIndex !== undefined) {
+        await this.handleProductImageSelection(compressedFile, imageIndex);
       }
       
     } catch (error) {
@@ -473,19 +494,41 @@ export class DashboardComponent implements OnInit {
       });
   }
   
-  private async handleProductImageSelection(file: File): Promise<void> {
-    console.log('Processing product image:', file.name);
-    this.productImage = file;
+  private async handleProductImageSelection(file: File, imageIndex: number): Promise<void> {
+    console.log(`Processing product image ${imageIndex + 1}:`, file.name);
+    
+    if (imageIndex < 0 || imageIndex >= this.MAX_PRODUCT_IMAGES) {
+      console.error('Invalid image index:', imageIndex);
+      return;
+    }
+    
+    this.productImages[imageIndex] = file;
     
     try {
-      this.productImagePreview = await this.createImagePreview(file);
-      console.log('Product image preview updated successfully');
+      this.productImagePreviews[imageIndex] = await this.createImagePreview(file);
+      console.log(`Product image ${imageIndex + 1} preview updated successfully`);
     } catch (error) {
-      console.error('Error creating product image preview:', error);
-      this.showSnackBar('პროდუქტის სურათის პრევიუს შექმნისას დაფიქსირდა შეცდომა');
-      this.productImage = null;
-      this.productImagePreview = null;
+      console.error(`Error creating product image ${imageIndex + 1} preview:`, error);
+      this.showSnackBar(`პროდუქტის სურათის ${imageIndex + 1} პრევიუს შექმნისას დაფიქსირდა შეცდომა`);
+      this.productImages[imageIndex] = null;
+      this.productImagePreviews[imageIndex] = null;
     }
+  }
+
+  removeProductImage(imageIndex: number): void {
+    if (imageIndex >= 0 && imageIndex < this.MAX_PRODUCT_IMAGES) {
+      this.productImages[imageIndex] = null;
+      this.productImagePreviews[imageIndex] = null;
+      console.log(`Product image ${imageIndex + 1} removed`);
+    }
+  }
+
+  hasProductImages(): boolean {
+    return this.productImages.some(image => image !== null);
+  }
+
+  getUploadedImagesCount(): number {
+    return this.productImages.filter(image => image !== null).length;
   }
 
   private createImagePreview(file: File): Promise<string> {
@@ -520,14 +563,15 @@ export class DashboardComponent implements OnInit {
     }
   }
   
+  // განახლებული addProduct მეთოდი
   addProduct(): void {
     if (this.productForm.invalid) {
       this.showSnackBar('გთხოვთ შეავსოთ ყველა საჭირო ველი');
       return;
     }
     
-    if (!this.productImage) {
-      this.showSnackBar('გთხოვთ აირჩიოთ პროდუქტის სურათი');
+    if (!this.hasProductImages()) {
+      this.showSnackBar('გთხოვთ აირჩიოთ მინიმუმ ერთი პროდუქტის სურათი');
       return;
     }
     
@@ -537,44 +581,112 @@ export class DashboardComponent implements OnInit {
     }
     
     console.log('Form values:', this.productForm.value);
-    console.log('Phone value:', this.productForm.value.phone);
-    console.log('Email value:', this.productForm.value.email);
-    console.log('City value:', this.productForm.value.city);
-    console.log('Product image size:', (this.productImage.size / 1024 / 1024).toFixed(2) + 'MB');
+    console.log('Uploaded images count:', this.getUploadedImagesCount());
     
+    // პირველ რიგში შევამოწმოთ კონექცია
+    this.productService.checkConnection().subscribe({
+      next: () => {
+        console.log('კონექცია წარმატებულია, ვაგრძელებთ პროდუქტის დამატებას');
+        this.performAddProduct();
+      },
+      error: (error) => {
+        console.error('კონექციის შეცდომა:', error);
+        this.showSnackBar('სერვერთან კავშირი ვერ დამყარდა. გთხოვთ შეამოწმოთ ინტერნეტი.');
+      }
+    });
+  }
+
+  private performAddProduct(): void {
     const formData = new FormData();
+    
+    // ძირითადი ინფორმაცია
     formData.append('title', this.productForm.value.title || '');
     formData.append('category', this.productForm.value.category || '');
     formData.append('year', this.productForm.value.year?.toString() || '');
     formData.append('price', this.productForm.value.price?.toString() || '');
     formData.append('description', this.productForm.value.description || '');
-    formData.append('city', this.productForm.value.city || ''); // ქალაქის დამატება
+    formData.append('city', this.productForm.value.city || '');
     formData.append('phone', this.productForm.value.phone || '');
     formData.append('email', this.productForm.value.email || '');
-    formData.append('productImage', this.productImage);
+    
+    // სურათების დამატება
+    let imageCount = 0;
+    this.productImages.forEach((image, index) => {
+      if (image) {
+        formData.append(`productImage${index + 1}`, image);
+        imageCount++;
+        console.log(`Added image ${index + 1}:`, image.name);
+      }
+    });
 
+    console.log(`სულ ${imageCount} სურათი დაემატა FormData-ში`);
+    
+    // FormData-ს შემთხვევაების დალოგვა
     console.log('FormData content:');
     for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
+      if (value instanceof File) {
+        console.log(`${key}: File(${value.name}, ${value.size} bytes)`);
+      } else {
+        console.log(`${key}:`, value);
+      }
     }
 
     this.isUploading = true;
+    this.showSnackBar('პროდუქტი იტვირთება...');
 
     this.productService.addProduct(formData)
-      .pipe(finalize(() => this.isUploading = false))
+      .pipe(
+        timeout(60000), // 60 წამი timeout
+        retry(2), // 2-ჯერ retry
+        finalize(() => {
+          this.isUploading = false;
+        }),
+        catchError((error) => {
+          console.error('პროდუქტის დამატების შეცდომა:', error);
+          
+          // სხვადასხვა შეცდომის ტიპების დამუშავება
+          if (error.message.includes('ქსელის შეცდომა')) {
+            this.showSnackBar('ქსელის შეცდომა - შეამოწმეთ ინტერნეტი');
+          } else if (error.message.includes('ავტორიზაციის შეცდომა')) {
+            this.showSnackBar('ავტორიზაციის შეცდომა - გთხოვთ ხელახლა შეხვიდეთ');
+            this.authService.logout();
+            this.router.navigate(['/auth/login']);
+          } else {
+            this.showSnackBar('პროდუქტის დამატება ვერ მოხერხდა: ' + error.message);
+          }
+          
+          return of(null);
+        })
+      )
       .subscribe({
         next: (response) => {
-          console.log('Server response:', response);
-          this.showSnackBar('პროდუქტი წარმატებით დაემატა');
-          this.resetProductForm();
-          this.loadUserProducts();
-          this.productFormVisible = false;
+          if (response) {
+            console.log('Server response:', response);
+            this.showSnackBar('პროდუქტი წარმატებით დაემატა');
+            this.resetProductForm();
+            this.loadUserProducts();
+            this.productFormVisible = false;
+          }
         },
         error: (error) => {
-          console.error('პროდუქტის დამატების შეცდომა:', error);
-          this.showSnackBar('პროდუქტის დამატება ვერ მოხერხდა');
+          // ეს არ უნდა მოხდეს რადგან catchError-ი ყველა შეცდომას იჭერს
+          console.error('Unexpected error:', error);
+          this.showSnackBar('მოულოდნელი შეცდომა');
         }
       });
+  }
+
+  // დამატებითი მეთოდი კონექციის შესამოწმებლად
+  checkServerConnection(): void {
+    this.productService.checkConnection().subscribe({
+      next: () => {
+        this.showSnackBar('სერვერთან კავშირი წარმატებულია');
+      },
+      error: (error) => {
+        console.error('Server connection error:', error);
+        this.showSnackBar('სერვერთან კავშირი ვერ დამყარდა');
+      }
+    });
   }
 
   deleteProduct(productId: string): void {
@@ -594,8 +706,8 @@ export class DashboardComponent implements OnInit {
   
   resetProductForm(): void {
     this.productForm.reset();
-    this.productImage = null;
-    this.productImagePreview = null;
+    this.productImages = [null, null, null];
+    this.productImagePreviews = [null, null, null];
   }
   
   canAddMoreProducts(): boolean {
@@ -613,8 +725,65 @@ export class DashboardComponent implements OnInit {
       verticalPosition: 'bottom'
     });
   }
+  getAllProductImages(product: Product): string[] {
+  const images: string[] = [];
+  
+  // ახალი images array-ის მხარდაჭერა
+  if (product.images && product.images.length > 0) {
+    images.push(...product.images);
+  }
+  
+  // ძველი image ველის მხარდაჭერა
+  if (product.image && !images.includes(product.image)) {
+    images.push(product.image);
+  }
+  
+  // ძველი productImage1, productImage2, productImage3 ველების მხარდაჭერა
+  if (product.productImage1 && !images.includes(product.productImage1)) {
+    images.push(product.productImage1);
+  }
+  if (product.productImage2 && !images.includes(product.productImage2)) {
+    images.push(product.productImage2);
+  }
+  if (product.productImage3 && !images.includes(product.productImage3)) {
+    images.push(product.productImage3);
+  }
+  
+  // ფილტრაცია: მხოლოდ ვალიდური სურათები
+  return images.filter(img => img && img.trim() !== '');
+}
+
+// შეგიძლია დაამატო დამატებითი მეთოდი primary image-ისთვის:
+getPrimaryImage(product: Product): string {
+  const images = this.getAllProductImages(product);
+  return images.length > 0 ? images[0] : '/assets/default-product.jpg';
+}
+
+// და რაოდენობის დასადგენად:
+getImageCount(product: Product): number {
+  return this.getAllProductImages(product).length;
+}
 
   get isProcessing(): boolean {
     return this.isUploading || this.isCompressing;
   }
+
+  onImageError(event: Event): void {
+  const img = event.target as HTMLImageElement;
+  if (img) {
+    console.log('Image load error:', img.src);
+    img.src = '/assets/default-product.jpg'; // default image
+    img.alt = 'სურათი ვერ ჩაიტვირთა';
+  }
+}
+
+// პროდუქტში სურათის არსებობის შესამოწმებლად
+hasValidImages(product: Product): boolean {
+  return this.getAllProductImages(product).length > 0;
+}
+
+// სურათის URL-ის ვალიდაციისთვის
+isValidImageUrl(url: string): boolean {
+  return typeof url === 'string' && url.trim() !== '' && !url.includes('undefined') && !url.includes('null');
+}
 }

@@ -170,55 +170,157 @@
         </mat-error>
       </mat-form-field>
       <!-- პროდუქტის სურათის ატვირთვა -->
-      <div class="image-upload-section">
-        <h3>პროდუქტის სურათი</h3>
-        
-        <input 
-          type="file" 
-          id="productImageInput" 
-          accept="image/*,image/jpeg,image/jpg,image/png,image/gif,image/webp" 
-          capture="environment"
-          class="imgupload"
-          (change)="onFileSelected($event, 'product')"
-          #productInput
-          tabindex="-1"
-        />
+  <div class="image-upload-section">
+    
+  </div>
 
-        <!-- ალტერნატიული hidden input ანდროიდისთვის -->
-        <input 
-          type="file" 
-          id="productImageInputAlt" 
-          accept="image/*" 
-          class="imgupload"
-          style="display: none; "
-          (change)="onAlternativeFileSelected($event, 'product')"
-        />
+  <div class="image-upload-section">
+    <h3>პროდუქტის სურათები (მაქს. 3 სურათი)</h3>
+    
+    <!-- პირველი სურათი -->
+    <div class="image-upload-group">
+      <h4>სურათი 1</h4>
+      <input 
+        type="file" 
+        id="productImageInput1" 
+        accept="image/*,image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+        capture="environment"
+        style="position: absolute; left: -9999px; opacity: 0; width: 1px; height: 1px; overflow: hidden;"
+        (change)="onFileSelected($event, 'product', 0)"
+        #productInput1
+        tabindex="-1"
+      />
 
-        <div class="image-upload-area" (click)="triggerProductImageInput()">
-          <div *ngIf="!productImagePreview" class="upload-placeholder">
-            <span class="upload-icon">📷</span>
-            <p>დააჭირეთ სურათის ასარჩევად</p>
-          </div>
-          <img *ngIf="productImagePreview" [src]="productImagePreview" class="product-image-preview" alt="Product Preview" />
+      <!-- ალტერნატიული hidden input ანდროიდისთვის -->
+      <input 
+        type="file" 
+        id="productImageInput1Alt" 
+        accept="image/*" 
+        style="display: none;"
+        (change)="onAlternativeFileSelected($event, 'product', 0)"
+      />
+
+      <div class="image-upload-area" (click)="triggerProductImageInput(0)"> 
+        <div *ngIf="!productImagePreviews[0]" class="upload-placeholder">
+          <span class="upload-icon">📷</span>
+          <p>დააჭირეთ პირველი სურათის ასარჩევად</p>
         </div>
-
-        <!-- ანდროიდისთვის ალტერნატიული ღილაკი -->
-        <label for="productImageInputAlt" class="android-upload-btn" 
-               style="display: inline-block; margin-top: 10px; padding: 8px 16px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; text-align: center; font-size: 12px;">
-          📷 ალტ. სურათის არჩევა
-        </label>
-      </div>
-
-      <div class="form-actions">
-        <button mat-flat-button type="submit" class="btn submit-btn" [disabled]="productForm.invalid || isUploading">
-          <span *ngIf="!isUploading">პროდუქტის დამატება</span>
-          <span *ngIf="isUploading">იტვირთება...</span>
-        </button>
-        <button mat-flat-button type="button" class="btn cancel-btn" (click)="toggleProductForm()">
-          გაუქმება
+        <img *ngIf="productImagePreviews[0]" [src]="productImagePreviews[0]" class="product-image-preview" alt="Product Preview 1" />
+        <button *ngIf="productImagePreviews[0]" type="button" class="remove-image-btn" (click)="removeProductImage(0); $event.stopPropagation()">
+          ✕
         </button>
       </div>
-    </form>
+
+      <!-- ანდროიდისთვის ალტერნატიული ღილაკი -->
+      <label for="productImageInput1Alt" class="android-upload-btn" 
+            style="display: inline-block; margin-top: 10px; padding: 8px 16px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; text-align: center; font-size: 12px;">
+        📷 ალტ. სურათი 1
+      </label>
+    </div>
+
+    <!-- მეორე სურათი -->
+    <div class="image-upload-group">
+      <h4>სურათი 2</h4>
+      <input 
+        type="file" 
+        id="productImageInput2" 
+        accept="image/*,image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+        capture="environment"
+        style="position: absolute; left: -9999px; opacity: 0; width: 1px; height: 1px; overflow: hidden;"
+        (change)="onFileSelected($event, 'product', 1)"
+        #productInput2
+        tabindex="-1"
+      />
+
+      <!-- ალტერნატიული hidden input ანდროიდისთვის -->
+      <input 
+        type="file" 
+        id="productImageInput2Alt" 
+        accept="image/*" 
+        style="display: none;"
+        (change)="onAlternativeFileSelected($event, 'product', 1)"
+      />
+
+      <div class="image-upload-area" (click)="triggerProductImageInput(1)"> 
+        <div *ngIf="!productImagePreviews[1]" class="upload-placeholder">
+          <span class="upload-icon">📷</span>
+          <p>დააჭირეთ მეორე სურათის ასარჩევად</p>
+        </div>
+        <img *ngIf="productImagePreviews[1]" [src]="productImagePreviews[1]" class="product-image-preview" alt="Product Preview 2" />
+        <button *ngIf="productImagePreviews[1]" type="button" class="remove-image-btn" (click)="removeProductImage(1); $event.stopPropagation()">
+          ✕
+        </button>
+      </div>
+
+      <!-- ანდროიდისთვის ალტერნატიული ღილაკი -->
+      <label for="productImageInput2Alt" class="android-upload-btn" 
+            style="display: inline-block; margin-top: 10px; padding: 8px 16px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; text-align: center; font-size: 12px;">
+        📷 ალტ. სურათი 2
+      </label>
+    </div>
+
+    <!-- მესამე სურათი -->
+    <div class="image-upload-group">
+      <h4>სურათი 3</h4>
+      <input 
+        type="file" 
+        id="productImageInput3" 
+        accept="image/*,image/jpeg,image/jpg,image/png,image/gif,image/webp" 
+        capture="environment"
+        style="position: absolute; left: -9999px; opacity: 0; width: 1px; height: 1px; overflow: hidden;"
+        (change)="onFileSelected($event, 'product', 2)"
+        #productInput3
+        tabindex="-1"
+      />
+
+      <!-- ალტერნატიული hidden input ანდროიდისთვის -->
+      <input 
+        type="file" 
+        id="productImageInput3Alt" 
+        accept="image/*" 
+        style="display: none;"
+        (change)="onAlternativeFileSelected($event, 'product', 2)"
+      />
+
+      <div class="image-upload-area" (click)="triggerProductImageInput(2)"> 
+        <div *ngIf="!productImagePreviews[2]" class="upload-placeholder">
+          <span class="upload-icon">📷</span>
+          <p>დააჭირეთ მესამე სურათის ასარჩევად</p>
+        </div>
+        <img *ngIf="productImagePreviews[2]" [src]="productImagePreviews[2]" class="product-image-preview" alt="Product Preview 3" />
+        <button *ngIf="productImagePreviews[2]" type="button" class="remove-image-btn" (click)="removeProductImage(2); $event.stopPropagation()">
+          ✕
+        </button>
+      </div>
+
+      <!-- ანდროიდისთვის ალტერნატიული ღილაკი -->
+      <label for="productImageInput3Alt" class="android-upload-btn" 
+            style="display: inline-block; margin-top: 10px; padding: 8px 16px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; text-align: center; font-size: 12px;">
+        📷 ალტ. სურათი 3
+      </label>
+    </div>
+
+    <!-- სურათების სტატისტიკა -->
+    <div class="image-upload-stats" style="margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 5px;">
+      <p><strong>ატვირთული სურათები: {{getUploadedImagesCount()}} / {{MAX_PRODUCT_IMAGES}}</strong></p>
+      <p *ngIf="!hasProductImages()" style="color: #ff9800;">
+        ⚠️ მინიმუმ ერთი სურათი აუცილებელია
+      </p>
+      <p *ngIf="hasProductImages()" style="color: #4caf50;">
+        ✅ სურათები წარმატებით ატვირთულია
+      </p>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button mat-flat-button type="submit" class="btn submit-btn" [disabled]="productForm.invalid || isUploading">
+      <span *ngIf="!isUploading">პროდუქტის დამატება</span>
+      <span *ngIf="isUploading">იტვირთება...</span>
+    </button>
+    <button mat-flat-button type="button" class="btn cancel-btn" (click)="toggleProductForm()">
+      გაუქმება
+    </button>
+  </div>
+</form>
   </div>
 </div>
 
@@ -226,27 +328,58 @@
 
 <div class="user-products-section" *ngIf="userProducts.length > 0">
   
-  <div class="products-grid">
-    <div class="product-card" *ngFor="let product of userProducts">
-     
-        <img [src]="product.image || 'https://i.ibb.co/GvshXkLK/307ce493-b254-4b2d-8ba4-d12c080d6651.jpg'" [alt]="product.title" />
-     
-      <div class="product-info">
-        <h3>{{ product.title }}</h3>
-        <p class="product-category">{{ product.category }}</p>
-        <p class="product-price">{{ product.price }} ₾</p>
-        <p class="product-year">წელი: {{ product.year }}</p>
-        <p class="product-location">{{ product.cities }}</p>
-        <p class="product-date">დამატებულია: {{ formatDate(product.createdAt) }}</p>
+ <div class="products-grid">
+  <div class="product-card" *ngFor="let product of userProducts">
+    
+    <!-- სურათების სლაიდერი -->
+    <div class="product-images">
+      <swiper-container 
+        slides-per-view="1" 
+        pagination="true" 
+        navigation="true"
+        class="product-swiper">
+        
+        <swiper-slide *ngFor="let image of getAllProductImages(product); let i = index">
+          <img [src]="image" 
+               class="swiperimage" 
+               [alt]="product.title + ' - სურათი ' + (i + 1)"
+               (error)="onImageError($event)">
+        </swiper-slide>
+        
+        <!-- თუ სურათი არ არის, default image -->
+        <swiper-slide *ngIf="getAllProductImages(product).length === 0">
+          <img src="/assets/default-product.jpg" 
+               class="swiperimage" 
+               [alt]="product.title + ' - default სურათი'">
+        </swiper-slide>
+        
+      </swiper-container>
+      
+      <!-- სურათების რაოდენობის მაჩვენებელი -->
+      <div class="image-counter" *ngIf="getAllProductImages(product).length > 1">
+        {{ getImageCount(product) }} სურათი
       </div>
-      <div class="product-actions">
-        <button mat-flat-button class="delete-btn" (click)="deleteProduct(product._id!)">
-          წაშლა
-        </button>
-      </div>
+    </div>
+    
+    <!-- პროდუქტის ინფორმაცია -->
+    <div class="product-info">
+      <h3>{{ product.title }}</h3>
+      <p class="product-category">{{ product.category }}</p>
+      <p class="product-price">{{ product.price }} ₾</p>
+      <p class="product-year">წელი: {{ product.year }}</p>
+      <p class="product-location">{{ product.cities }}</p>
+      <p class="product-date">დამატებულია: {{ formatDate(product.createdAt) }}</p>
+    </div>
+    
+    <!-- მოქმედების ღილაკები -->
+    <div class="product-actions">
+      <button mat-flat-button class="delete-btn" (click)="deleteProduct(product._id!)">
+        წაშლა
+      </button>
     </div>
   </div>
 </div>
+
 
 <!-- Loading indicator -->
 <div class="loading-overlay" *ngIf="isUploading">

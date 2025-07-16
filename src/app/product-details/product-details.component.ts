@@ -1,16 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MatChipsModule } from '@angular/material/chips';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { ProductService } from '../services/product.service';
 import { Product } from '../models/product';
-import { AuthService } from '../services/auth.service';
-import { User } from '../models/user.model';
 
 @Component({
   selector: 'app-product-details',
@@ -22,14 +21,18 @@ import { User } from '../models/user.model';
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatIconModule,
+    MatChipsModule
   ],
   templateUrl: './product-details.component.html',
-  styleUrls: ['./product-details.component.scss']
+  styleUrls: ['./product-details.component.scss'],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class ProductDetailComponent implements OnInit {
+export class ProductDetailsComponent implements OnInit {
   product: Product | null = null;
   isLoading = true;
   error: string | null = null;
+  currentImageIndex = 0;
+  productImages: string[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -42,7 +45,7 @@ export class ProductDetailComponent implements OnInit {
   ngOnInit(): void {
     const productId = this.route.snapshot.paramMap.get('id');
     
-    console.log('ProductDetailComponent ინიცირებულია, პროდუქტის ID:', productId);
+    console.log('ProductDetailsComponent ინიცირებულია, პროდუქტის ID:', productId);
     
     if (!productId) {
       this.error = 'პროდუქტის ID არ არის მითითებული';
@@ -51,6 +54,64 @@ export class ProductDetailComponent implements OnInit {
     }
 
     this.loadProduct(productId);
+  }
+
+  // პროდუქტის ყველა სურათის მიღება
+  getAllProductImages(product: Product): string[] {
+    const images: string[] = [];
+    
+    // პირველ რიგში ვამატებთ ძირითად სურათს
+    if (product.image) {
+      images.push(product.image);
+    }
+    
+    // შემდეგ ვამატებთ სურათების მასივიდან, მხოლოდ იმ სურათებს რომლებიც არ მეორდება
+    if (product.images && Array.isArray(product.images)) {
+      product.images.forEach(image => {
+        if (image && !images.includes(image)) {
+          images.push(image);
+        }
+      });
+    }
+    
+    // ძველი ველების მხარდაჭერა (უკანასკნელი თავსებადობისთვის)
+    [product.productImage1, product.productImage2, product.productImage3].forEach(image => {
+      if (image && !images.includes(image)) {
+        images.push(image);
+      }
+    });
+    
+    console.log(`პროდუქტის ${product.title} სურათები:`, images);
+    
+    // თუ არ არის სურათები, placeholder დავაბრუნოთ
+    if (images.length === 0) {
+      images.push('assets/images/placeholder.jpg');
+    }
+    
+    return images;
+  }
+
+  // სურათის ინდექსის შეცვლა
+  changeImage(index: number): void {
+    this.currentImageIndex = index;
+  }
+
+  // შემდეგი სურათი
+  nextImage(): void {
+    if (this.currentImageIndex < this.productImages.length - 1) {
+      this.currentImageIndex++;
+    } else {
+      this.currentImageIndex = 0;
+    }
+  }
+
+  // წინა სურათი
+  prevImage(): void {
+    if (this.currentImageIndex > 0) {
+      this.currentImageIndex--;
+    } else {
+      this.currentImageIndex = this.productImages.length - 1;
+    }
   }
 
   // იმეილის გაგზავნა
@@ -102,14 +163,14 @@ export class ProductDetailComponent implements OnInit {
     
     this.productService.getProductById(productId).subscribe({
       next: (response) => {
-        console.log('მივიღეთ პასუხი ProductDetailComponent-ში:', response);
+        console.log('მივიღეთ პასუხი ProductDetailsComponent-ში:', response);
         
         // განვსაზღვროთ პროდუქტი
         this.product = response.product || response;
         
-        console.log('დაყენებული პროდუქტი კომპონენტში:', this.product);
-        
+        // სურათების მიღება
         if (this.product) {
+          this.productImages = this.getAllProductImages(this.product);
           console.log('კონტაქტის ინფორმაცია კომპონენტში:', {
             email: this.product.email,
             phone: this.product.phone,
@@ -139,7 +200,7 @@ export class ProductDetailComponent implements OnInit {
     });
   }
 
-  // დამხმარე მეთოდები Template-ისთვის (თუ მაინც გჭირდებათ)
+  // დამხმარე მეთოდები Template-ისთვის
   getSellerName(): string {
     if (!this.product) return 'არ არის მითითებული';
     return this.product.userName || 'არ არის მითითებული';
@@ -153,5 +214,28 @@ export class ProductDetailComponent implements OnInit {
   getSellerPhone(): string {
     if (!this.product) return 'არ არის მითითებული';
     return this.product.phone || 'არ არის მითითებული';
+  }
+
+  // ფასის ფორმატირება
+  formatPrice(price: number): string {
+    return price.toLocaleString('ka-GE') + '₾';
+  }
+
+  // თარიღის ფორმატირება
+  formatDate(date: string): string {
+    if (!date) return 'არ არის მითითებული';
+    return new Date(date).toLocaleDateString('ka-GE');
+  }
+  onImageError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    target.src = 'assets/images/placeholder.jpg'; // შეცვალეთ placeholder-ის მისამართი საჭიროების მიხედვით
+    console.error('სურათის ჩატვირთვის შეცდომა:', event);
+  }
+  onThumbnailError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.src = 'assets/images/placeholder.jpg'; // შეცვალეთ placeholder-ის მისამართი საჭიროების მიხედვით
+    }
+    console.error('თამბნილის სურათის შეცდომა:', event);
   }
 }

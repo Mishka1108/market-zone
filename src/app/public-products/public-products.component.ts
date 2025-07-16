@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -32,7 +32,8 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
     MatAutocompleteModule
   ],
   templateUrl: './public-products.component.html',
-  styleUrls: ['./public-products.component.scss']
+  styleUrls: ['./public-products.component.scss'],
+  schemas:[CUSTOM_ELEMENTS_SCHEMA]
 })
 export class PublicProductsComponent implements OnInit {
   products: Product[] = [];
@@ -46,6 +47,7 @@ export class PublicProductsComponent implements OnInit {
   minPrice: number | null = null;
   maxPrice: number | null = null;
   filteredCities: string[] = [];
+  
   // კატეგორიების სია
   categories: string[] = [
     'ტელეფონები',
@@ -55,6 +57,7 @@ export class PublicProductsComponent implements OnInit {
     'სათამაშოები',
     'კომპიუტერები'
   ];
+  
   public cities: string[] = [
     'თბილისი',
     'ბათუმი',
@@ -106,7 +109,7 @@ export class PublicProductsComponent implements OnInit {
     'ბარნოვი',
     'ყვარელი',
     'შორაპანი',
-    'სოხუმი', 
+    'სოხუმი'
   ];
 
   constructor(
@@ -223,9 +226,9 @@ export class PublicProductsComponent implements OnInit {
     this.applyFilters();
   }
 
-  filterCities():void{
-const search=this.selectedCity?.toLowerCase();
-this.filteredCities=this.cities.filter(city=>city.toLowerCase().includes(search));
+  filterCities(): void {
+    const search = this.selectedCity?.toLowerCase();
+    this.filteredCities = this.cities.filter(city => city.toLowerCase().includes(search));
   }
 
   // ფილტრების გასუფთავება
@@ -262,4 +265,53 @@ this.filteredCities=this.cities.filter(city=>city.toLowerCase().includes(search)
       verticalPosition: 'bottom'
     });
   }
+
+  // მთავარი სურათი (პირველი)
+  getMainImage(product: Product): string {
+    const images = this.getAllProductImages(product);
+    return images[0];
+  }
+
+  // დანარჩენი სურათები (2-4)
+  getAdditionalImages(product: Product): string[] {
+    const images = this.getAllProductImages(product);
+    return images.slice(1, 4); // მაქსიმუმ 3 დამატებითი
+  }
+ 
+getAllProductImages(product: Product): string[] {
+  const images: string[] = [];
+  
+  // პირველ რიგში ვამატებთ ძირითად სურათს
+  if (product.image) {
+    images.push(product.image);
+  }
+  
+  // შემდეგ ვამატებთ სურათების მასივიდან, მხოლოდ იმ სურათებს რომლებიც არ მეორდება
+  if (product.images && Array.isArray(product.images)) {
+    product.images.forEach(image => {
+      if (image && !images.includes(image)) {
+        images.push(image);
+      }
+    });
+  }
+  
+  // ძველი ველების მხარდაჭერა (უკანასკნელი თავსებადობისთვის)
+  [product.productImage1, product.productImage2, product.productImage3].forEach(image => {
+    if (image && !images.includes(image)) {
+      images.push(image);
+    }
+  });
+  
+  // მაქსიმუმ 3 სურათი დავტოვოთ
+  const limitedImages = images.slice(0, 3);
+  
+  console.log(`პროდუქტის ${product.title} სურათები:`, limitedImages);
+  
+  // თუ არ არის სურათები, placeholder დავაბრუნოთ
+  if (limitedImages.length === 0) {
+    limitedImages.push('assets/images/placeholder.jpg');
+  }
+  
+  return limitedImages;
+}
 }

@@ -5,7 +5,7 @@ import { HomeComponent } from './home/home.component';
 
 import { ContactComponent } from './contact/contact.component';
 import { PublicProductsComponent } from './public-products/public-products.component';
-import { ProductDetailComponent, } from './product-details/product-details.component';
+import { ProductDetailsComponent } from './product-details/product-details.component'; // შეცვლილი ProductDetailComponent -> ProductDetailsComponent
 import { LoginComponent } from './login/login.component';
 
 export const routes: Routes = [
@@ -56,5 +56,5 @@ export const routes: Routes = [
   { path: 'contact', component: ContactComponent },
   {path: 'login', component: LoginComponent},
   { path: 'public-products', component: PublicProductsComponent }, // საჯარო პროდუქტების გვერდი
-  { path: 'product-details/:id', component:ProductDetailComponent } // პროდუქტის დეტალების გვერდი
+  { path: 'product-details/:id', component: ProductDetailsComponent } // შეცვლილი ProductDetailComponent -> ProductDetailsComponent
 ];
