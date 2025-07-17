@@ -1,3 +1,6 @@
+// Import modern color module at the top
+@use "sass:color";
+
 // ძირითადი ცვლადები
 $primary: #6C63FF;
 $primary-light: #8B83FF;
@@ -18,8 +21,9 @@ $border-radius-lg: 16px;
 $shadow: 0 4px 20px rgba(108, 99, 255, 0.08);
 $shadow-hover: 0 8px 25px rgba(108, 99, 255, 0.15);
 
-// Color adjustment functions using modern SASS
-@use "sass:color";
+// Product specific variables (add these if they don't exist)
+$product-primary: $primary;
+$product-accent: $accent;
 
 // მიქსინები
 @mixin flex-center {
