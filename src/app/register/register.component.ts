@@ -82,6 +82,6 @@ export class RegisterComponent {
     });
   }
   openGmail() {
-  window.open('https://mail.google.com/mail/u/0/#spam', '_blank');
+  window.open('https://mail.google.com/', '_blank');
 }
 }

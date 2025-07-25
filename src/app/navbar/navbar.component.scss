@@ -1,83 +1,329 @@
-.show-menu{
-    display: flex;
-  }
-
-.nav{
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    background-color: #DAE2F9;
-    padding: 10px 0;
-    border-bottom: 1px solid #ccc;
-    position: sticky;
-    top: 0;
-    .navmenu{
-        display: flex;
-        align-items: center;
-        .navIcon{
-            display: none;
-        }
-    }
-    .logo{
-        width: 90px;
-        height: 80px;
-        cursor: pointer;
-    }
-    .buysel{
-        font-size: 20px;
-        font-weight: bold;
-        font-family: Georgia, 'Times New Roman', Times, serif;
-        cursor: pointer;
-    }
-
-    .components{
-        display: flex;
-        gap: 70px;
-        .btn{
-           background-color: whitesmoke;
-           color: black !important;
-        }
-    }
-    .profileimg{
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        margin-right: 10px;
-        cursor: pointer;
-    }
+.show-menu {
+  display: flex !important;
+  animation: slideDown 0.3s ease-out;
 }
 
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-@media screen and (max-width:850px) {
-    .nav{
-        display: block;
-        height: auto;
-        position: relative !important;
-        
-        .navmenu{
-            gap: 10px !important;
-            margin-left: 20px !important;
-            .navIcon{
-                display: block;
-                width: 30px;
-                height: 30px;
-                cursor: pointer;
-            }
-        }
-        .components{
-            display: none;
-            flex-direction: column;
-            width: 100px !important;
-            gap: 20px !important;
-            margin: 10px !important;
-        }
-        .show-menu{
-            display: flex;
-        }
-        .profileimg{
-            position: absolute !important;
-            top: 25px;
-            right: 50px;
-        }
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  backdrop-filter: blur(10px);
+  padding: 15px 30px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: sticky;
+  top: 0;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  transition: all 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  }
+
+  .navmenu {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+
+    .navIcon {
+      display: none;
+      color: white;
+      font-size: 28px;
+      transition: all 0.3s ease;
+      padding: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
+      }
     }
+
+    a {
+      transition: transform 0.3s ease;
+
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  .logo {
+    width: 90px;
+    height: 80px;
+    cursor: pointer;
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+
+    &:hover {
+      transform: scale(1.05) rotate(2deg);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    }
+  }
+
+  .components {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      color: white !important;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 25px;
+      padding: 12px 24px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+
+      // Shimmer effect
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.6s ease;
+      }
+
+      // Ripple effect
+      &::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s ease, height 0.6s ease;
+      }
+
+      &:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 12px 35px rgba(0, 0, 0, 0.25);
+        border-color: rgba(255, 255, 255, 0.4);
+
+        &::before {
+          left: 100%;
+        }
+      }
+
+      // Click animation
+      &:active {
+        transform: translateY(-1px) scale(0.98);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        
+        &::after {
+          width: 300px;
+          height: 300px;
+        }
+      }
+
+      &.active {
+        background: linear-gradient(45deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.2));
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.5);
+        
+        &::before {
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+          animation: activeShimmer 2s infinite;
+        }
+      }
+
+      // Pulse animation for active state
+      &.active::after {
+        animation: activePulse 2s ease-in-out infinite;
+      }
+    }
+  }
+
+  .profileimg {
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    position: relative;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      border-radius: 50%;
+      background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+      background-size: 400% 400%;
+      animation: gradientRotate 3s ease infinite;
+      z-index: -1;
+      opacity: 0;
+    }
+
+    &:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+
+      &::before {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+@keyframes gradientRotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes activeShimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes activePulse {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.8;
+  }
+  50% {
+    width: 20px;
+    height: 20px;
+    opacity: 0.4;
+  }
+  100% {
+    width: 0;
+    height: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes buttonGlow {
+  0% {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+  }
+}
+
+// Mobile responsive design
+@media screen and (max-width: 850px) {
+  .nav {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    padding: 15px 20px;
+    position: relative !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+    .navmenu {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+
+      .navIcon {
+        display: block !important;
+      }
+    }
+
+    .components {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      width: 100%;
+      gap: 15px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 0 0 15px 15px;
+      padding: 20px;
+      z-index: 999;
+
+      .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 15px;
+        border-radius: 15px;
+      }
+    }
+
+    .profileimg {
+      width: 45px;
+      height: 45px;
+      position: relative;
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .nav {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    
+    .components .btn {
+      color: #e2e8f0 !important;
+    }
+  }
+}
+
+// Smooth scrolling behavior
+html {
+  scroll-behavior: smooth;
+}
+
+// Additional utility classes for enhanced interactivity
+.nav-blur {
+  backdrop-filter: blur(20px);
+  background: rgba(102, 126, 234, 0.8);
+}
+
+.nav-shadow-lg {
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
 }

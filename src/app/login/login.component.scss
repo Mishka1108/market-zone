@@ -120,3 +120,17 @@
       }
     }
   }
+   .forgot-password {
+    text-align: end;
+    margin-top: 20px;
+    font-size: 14px;
+    
+    a {
+      color: #007bff;
+      text-decoration: none;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+  }

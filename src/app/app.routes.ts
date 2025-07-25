@@ -7,6 +7,9 @@ import { ContactComponent } from './contact/contact.component';
 import { PublicProductsComponent } from './public-products/public-products.component';
 import { ProductDetailsComponent } from './product-details/product-details.component'; // შეცვლილი ProductDetailComponent -> ProductDetailsComponent
 import { LoginComponent } from './login/login.component';
+import { ForgotpasswordComponent } from './forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './reset-password/reset-password.component';
+
 
 export const routes: Routes = [
   {
@@ -56,5 +59,8 @@ export const routes: Routes = [
   { path: 'contact', component: ContactComponent },
   {path: 'login', component: LoginComponent},
   { path: 'public-products', component: PublicProductsComponent }, // საჯარო პროდუქტების გვერდი
-  { path: 'product-details/:id', component: ProductDetailsComponent } // შეცვლილი ProductDetailComponent -> ProductDetailsComponent
+  { path: 'product-details/:id', component: ProductDetailsComponent }, // შეცვლილი ProductDetailComponent -> ProductDetailsComponent
+  {path: 'forgot-password', component: ForgotpasswordComponent},
+  {path: 'reset-password', component: ResetPasswordComponent},
+  {path: 'auth/reset-password/:token', component: ResetPasswordComponent},
 ];

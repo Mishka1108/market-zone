@@ -11,8 +11,8 @@
   </div>
     <div class="components"  [ngClass]="{'show-menu':isShow}"> 
       <button mat-raised-button class="btn" routerLinkActive="active" (click)="closeMenu()"  routerLink="home">Home</button>
-      <button mat-raised-button class="btn" (click)="closeMenu()" routerLink="public-products">Product</button>
-      <button mat-raised-button class="btn" (click)="closeMenu()" routerLink="contact">Contact</button>
+      <button mat-raised-button class="btn"  routerLinkActive="active" (click)="closeMenu()" routerLink="public-products">Product</button>
+      <button mat-raised-button class="btn" routerLinkActive="active" (click)="closeMenu()" routerLink="contact">Contact</button>
     </div>
 
     <img [src]="profileImageUrl" class="profileimg" (click)="onProfileImageClick()" alt="">
