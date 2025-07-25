@@ -238,4 +238,12 @@ export class ProductDetailsComponent implements OnInit {
     }
     console.error('თამბნილის სურათის შეცდომა:', event);
   }
+ shareProduct(): void {
+  const currentUrl = window.location.origin + this.router.url;
+  const encodedUrl = encodeURIComponent(currentUrl);
+  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+
+  window.open(fbShareUrl, '_blank', 'width=600,height=400');
+  console.log("Share URL:", currentUrl);
+}
 }

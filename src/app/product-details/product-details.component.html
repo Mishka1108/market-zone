@@ -45,7 +45,7 @@
                 <img 
                   [src]="image" 
                   [alt]="product.title + ' - სურათი ' + (i + 1)" 
-                  class="main-image"
+                  
                   (error)="onImageError($event)"
                   class="main-image"
                   />
@@ -156,6 +156,15 @@
               (click)="sendEmail()">
               <mat-icon>email</mat-icon>
               <span>იმეილი</span>
+            </button>
+             <button 
+              mat-raised-button 
+              color="accent"
+              class="contact-button"
+              (click)="shareProduct()"
+             >
+              <mat-icon>share</mat-icon>
+              <span>გააზიარეთ</span>
             </button>
           </mat-card-actions>
         </mat-card>
