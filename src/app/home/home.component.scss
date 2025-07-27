@@ -527,32 +527,30 @@
                 text-align: center;
             }
 
-            .circle {
-                width: 200px;
-                height: 200px;
-                margin-top: 2rem;
-            }
-
-            .circle1, .circle2, .circle3 {
-                width: 70px !important;
-                height: 70px !important;
-            }
-
-            .circle1 {
-                left: 25px;
-                top: 30px;
-            }
-
-            .circle2 {
-                right: 25px !important;
-                top: 30px;
-            }
-
-            .circle3 {
-                top: 120px !important;
-                left: 70px !important;
-            }
-
+            .circle{
+      top: 25px;
+      width: 200px;
+      height: 200px;
+      .circle1, .circle2,.circle3{
+        width: 70px !important;
+        height: 70px !important;
+      }
+      .circle1{
+        left: 25px;
+        top: 30px;
+      }
+      .circle2{
+        right: 25px !important;
+        top: 30px;
+      }
+      .circle3 {
+        position: absolute !important;
+        top: 120px;
+        left: 70px !important;
+        width: 70px !important;
+        height: 70px !important;
+      }
+    }
             .sell {
                 flex-direction: column;
                 margin: 2rem 1rem;
@@ -572,11 +570,31 @@
                 padding: 2rem 1rem;
             }
 
-            .circle {
-                width: 250px;
-                height: 250px;
-                margin-top: 2rem;
-            }
+          .circle{
+      top: 25px;
+      width: 250px;
+      height: 250px;
+      .circle1, .circle2,.circle3{
+        width: 90px !important;
+        height: 90px !important;
+      }
+      .circle1{
+        position: absolute !important;
+        left: 30px !important;
+        top: 40px !important;
+      }
+      .circle2{
+        right: 25px !important;
+        top: 40px;
+      }
+      .circle3 {
+        position: absolute !important;
+        top: 150px !important;
+        left: 85px !important;
+        width: 90px !important;
+        height: 90px !important;
+      }
+    }
 
             .sell {
                 flex-direction: column;
