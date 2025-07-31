@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { NavbarComponent } from "./navbar/navbar.component";
 import { FooterComponent } from "./footer/footer.component";
 import { KeepAliveService } from './services/keep-alive.service';
+import { filter } from 'rxjs/internal/operators/filter';
 
 @Component({
   selector: 'app-root',
@@ -12,8 +13,15 @@ import { KeepAliveService } from './services/keep-alive.service';
 })
 export class AppComponent implements OnInit {
   title = 'MarketZone';
-  constructor(private keepAliveService: KeepAliveService) {}
+ 
+    constructor(private router: Router) {
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' }); // ან გამოიყენე: window.scrollTo(0, 0);
+    });
+  }
   ngOnInit(): void {
-    this.keepAliveService.startKeepAlive();
+    throw new Error('Method not implemented.');
   }
 }
