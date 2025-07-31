@@ -171,7 +171,26 @@
       gap: 15px;
 
       .navIcon {
-        display: block !important;
+        display: flex;
+        align-items: center !important;
+        justify-content: center !important;
+        padding: 10px;
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 24px;
+        color: white !important;
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.2) !important;
+          transform: scale(1.1);
+        }
+        &.active {
+          background-color: rgba(255, 255, 255, 0.2) !important;
+          color: #667eea;
+        }
+
+        
+        
       }
     }
 
