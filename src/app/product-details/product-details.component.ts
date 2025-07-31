@@ -1,4 +1,4 @@
-import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -27,12 +27,16 @@ import { Product } from '../models/product';
   styleUrls: ['./product-details.component.scss'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
-export class ProductDetailsComponent implements OnInit {
+export class ProductDetailsComponent implements OnInit, OnDestroy {
   product: Product | null = null;
   isLoading = true;
   error: string | null = null;
   currentImageIndex = 0;
   productImages: string[] = [];
+  
+  // Image modal properties
+  showImageModal = false;
+  currentModalIndex = 0;
 
   constructor(
     private route: ActivatedRoute,
@@ -55,6 +59,57 @@ export class ProductDetailsComponent implements OnInit {
 
     this.loadProduct(productId);
   }
+
+  ngOnDestroy(): void {
+    // Clean up any subscriptions or event listeners if needed
+    this.closeImageModal();
+  }
+
+  // Keyboard event listener for modal navigation
+  @HostListener('document:keydown', ['$event'])
+  handleKeyDown(event: KeyboardEvent): void {
+    if (this.showImageModal) {
+      switch (event.key) {
+        case 'Escape':
+          this.closeImageModal();
+          break;
+        case 'ArrowLeft':
+          this.prevModalImage();
+          break;
+        case 'ArrowRight':
+          this.nextModalImage();
+          break;
+      }
+    }
+  }
+
+  // Touch event handling for mobile swipe
+  @HostListener('document:touchstart', ['$event'])
+  onTouchStart(event: TouchEvent): void {
+    if (this.showImageModal) {
+      this.touchStartX = event.touches[0].clientX;
+    }
+  }
+
+  @HostListener('document:touchend', ['$event'])
+  onTouchEnd(event: TouchEvent): void {
+    if (this.showImageModal && this.touchStartX !== null) {
+      const touchEndX = event.changedTouches[0].clientX;
+      const diff = this.touchStartX - touchEndX;
+      
+      if (Math.abs(diff) > 50) { // Minimum swipe distance
+        if (diff > 0) {
+          this.nextModalImage();
+        } else {
+          this.prevModalImage();
+        }
+      }
+      
+      this.touchStartX = null;
+    }
+  }
+
+  private touchStartX: number | null = null;
 
   // პროდუქტის ყველა სურათის მიღება
   getAllProductImages(product: Product): string[] {
@@ -94,6 +149,21 @@ export class ProductDetailsComponent implements OnInit {
   // სურათის ინდექსის შეცვლა
   changeImage(index: number): void {
     this.currentImageIndex = index;
+    
+    // Update swiper if available
+    this.updateSwiperSlide(index);
+  }
+
+  // Update swiper to specific slide
+  private updateSwiperSlide(index: number): void {
+    try {
+      const swiperElement = document.querySelector('.main-swiper') as any;
+      if (swiperElement && swiperElement.swiper) {
+        swiperElement.swiper.slideTo(index);
+      }
+    } catch (error) {
+      console.warn('Swiper update failed:', error);
+    }
   }
 
   // შემდეგი სურათი
@@ -103,6 +173,7 @@ export class ProductDetailsComponent implements OnInit {
     } else {
       this.currentImageIndex = 0;
     }
+    this.updateSwiperSlide(this.currentImageIndex);
   }
 
   // წინა სურათი
@@ -111,6 +182,35 @@ export class ProductDetailsComponent implements OnInit {
       this.currentImageIndex--;
     } else {
       this.currentImageIndex = this.productImages.length - 1;
+    }
+    this.updateSwiperSlide(this.currentImageIndex);
+  }
+
+  // Image Modal Functions
+  openImageModal(imageUrl: string, index: number): void {
+    this.currentModalIndex = index;
+    this.showImageModal = true;
+    
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+  }
+
+  closeImageModal(): void {
+    this.showImageModal = false;
+    
+    // Restore body scroll
+    document.body.style.overflow = 'auto';
+  }
+
+  nextModalImage(): void {
+    if (this.currentModalIndex < this.productImages.length - 1) {
+      this.currentModalIndex++;
+    }
+  }
+
+  prevModalImage(): void {
+    if (this.currentModalIndex > 0) {
+      this.currentModalIndex--;
     }
   }
 
@@ -123,7 +223,14 @@ export class ProductDetailsComponent implements OnInit {
 
     try {
       const subject = encodeURIComponent(`${this.product.title} - პროდუქტთან დაკავშირებით`);
-      const body = encodeURIComponent(`გამარჯობა,\n\nმაინტერესებს თქვენი პროდუქტი: ${this.product.title}\nფასი: ${this.product.price}₾\n\nმადლობა!`);
+      const body = encodeURIComponent(`გამარჯობა,
+
+მაინტერესებს თქვენი პროდუქტი: ${this.product.title}
+ფასი: ${this.formatPrice(this.product.price)}
+
+გთხოვთ, დამიკავშირდით დეტალური ინფორმაციისთვის.
+
+მადლობა!`);
       const mailtoLink = `mailto:${this.product.email}?subject=${subject}&body=${body}`;
       
       window.open(mailtoLink, '_blank');
@@ -156,6 +263,49 @@ export class ProductDetailsComponent implements OnInit {
       console.error('დარეკვის შეცდომა:', error);
       this.showSnackBar('დარეკვისას წარმოიშვა შეცდომა');
     }
+  }
+
+  // Product sharing with enhanced options
+  shareProduct(): void {
+    const currentUrl = window.location.origin + this.router.url;
+    const title = this.product?.title || 'პროდუქტი ';
+    const text = `შეხედეთ ამ საინტერესო პროდუქტს: ${title}`;
+
+    // Check if Web Share API is supported
+    if (navigator.share) {
+      navigator.share({
+        title: title,
+        text: text,
+        url: currentUrl
+      }).then(() => {
+        this.showSnackBar('პროდუქტი გაზიარდა');
+      }).catch((error) => {
+        console.log('Web Share API error:', error);
+        this.fallbackShare(currentUrl);
+      });
+    } else {
+      this.fallbackShare(currentUrl);
+    }
+  }
+
+  private fallbackShare(url: string): void {
+    // Copy to clipboard as fallback
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(url).then(() => {
+        this.showSnackBar('ლინკი კოპირებულია ბუფერში');
+      }).catch(() => {
+        this.openFacebookShare(url);
+      });
+    } else {
+      this.openFacebookShare(url);
+    }
+  }
+
+  private openFacebookShare(url: string): void {
+    const encodedUrl = encodeURIComponent(url);
+    const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
+    window.open(fbShareUrl, '_blank', 'width=600,height=400');
+    this.showSnackBar('Facebook გაზიარების ფანჯარა გაიხსნა');
   }
 
   loadProduct(productId: string): void {
@@ -196,7 +346,8 @@ export class ProductDetailsComponent implements OnInit {
     this.snackBar.open(message, 'დახურვა', {
       duration: 3000,
       horizontalPosition: 'center',
-      verticalPosition: 'bottom'
+      verticalPosition: 'bottom',
+      panelClass: ['custom-snackbar']
     });
   }
 
@@ -218,32 +369,55 @@ export class ProductDetailsComponent implements OnInit {
 
   // ფასის ფორმატირება
   formatPrice(price: number): string {
+    if (!price) return '0₾';
     return price.toLocaleString('ka-GE') + '₾';
   }
 
   // თარიღის ფორმატირება
   formatDate(date: string): string {
     if (!date) return 'არ არის მითითებული';
-    return new Date(date).toLocaleDateString('ka-GE');
+    try {
+      return new Date(date).toLocaleDateString('ka-GE');
+    } catch {
+      return 'არ არის მითითებული';
+    }
   }
+
+  // Error handling for images
   onImageError(event: Event): void {
     const target = event.target as HTMLImageElement;
-    target.src = 'assets/images/placeholder.jpg'; // შეცვალეთ placeholder-ის მისამართი საჭიროების მიხედვით
-    console.error('სურათის ჩატვირთვის შეცდომა:', event);
+    if (target && !target.dataset['errorHandled']) {
+      target.src = 'assets/images/placeholder.jpg';
+      target.dataset['errorHandled'] = 'true';
+      console.error('სურათის ჩატვირთვის შეცდომა:', event);
+    }
   }
+
   onThumbnailError(event: Event): void {
     const img = event.target as HTMLImageElement;
-    if (img) {
-      img.src = 'assets/images/placeholder.jpg'; // შეცვალეთ placeholder-ის მისამართი საჭიროების მიხედვით
+    if (img && !img.dataset['errorHandled']) {
+      img.src = 'assets/images/placeholder.jpg';
+      img.dataset['errorHandled'] = 'true';
+      console.error('თამბნილის სურათის შეცდომა:', event);
     }
-    console.error('თამბნილის სურათის შეცდომა:', event);
   }
- shareProduct(): void {
-  const currentUrl = window.location.origin + this.router.url;
-  const encodedUrl = encodeURIComponent(currentUrl);
-  const fbShareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
 
-  window.open(fbShareUrl, '_blank', 'width=600,height=400');
-  console.log("Share URL:", currentUrl);
-}
+  // Check if image is valid URL
+  isValidImageUrl(url: string): boolean {
+    if (!url) return false;
+    try {
+      new URL(url);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  // Lazy loading optimization
+  onImageLoad(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    if (img) {
+      img.classList.add('loaded');
+    }
+  }
 }

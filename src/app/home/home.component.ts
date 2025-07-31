@@ -12,12 +12,18 @@ import { RouterLink, Router } from '@angular/router';
 export class HomeComponent {
   
   constructor(private router: Router) {}
+   private scrollToTop(): void {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   onCategoryClick(category: string): void {
+    this.scrollToTop();
     console.log(`კატეგორია დაჭერილია: ${category}`);
     // გადავიდეთ პროდუქტების გვერდზე არჩეული კატეგორიით
     this.router.navigate(['/public-products'], { 
       queryParams: { category: category } 
     });
   }
-}
+
+ 
+  }

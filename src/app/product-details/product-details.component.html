@@ -27,10 +27,10 @@
     </div>
 
     <div class="product-content">
-      <!-- Image Gallery Section with Swiper -->
+      <!-- Image Gallery Section with Enhanced Swiper -->
       <div class="image-gallery-section">
         <div class="swiper-container">
-          <!-- Main Image Swiper -->
+          <!-- Main Image Swiper with Zoom -->
           <swiper-container 
             class="main-swiper"
             slides-per-view="1"
@@ -38,23 +38,44 @@
             loop="productImages.length > 1"
             navigation="true"
             pagination="{ clickable: true }"
-            
-            >
+            zoom="true"
+            grab-cursor="true"
+            keyboard="{ enabled: true }"
+            mousewheel="{ thresholdDelta: 70 }">
             <swiper-slide *ngFor="let image of productImages; let i = index">
-              <div class="main-image-container">
-                <img 
-                  [src]="image" 
-                  [alt]="product.title + ' - სურათი ' + (i + 1)" 
-                  
-                  (error)="onImageError($event)"
-                  class="main-image"
-                  />
+              <div class="swiper-zoom-container">
+                <div class="main-image-container">
+                  <img 
+                    [src]="image" 
+                    [alt]="product.title + ' - სურათი ' + (i + 1)" 
+                    (error)="onImageError($event)"
+                    (click)="openImageModal(image, i)"
+                    class="main-image zoomable-image"
+                    loading="lazy" />
+                  <div class="zoom-indicator">
+                    <mat-icon>zoom_in</mat-icon>
+                  </div>
+                </div>
               </div>
             </swiper-slide>
           </swiper-container>
 
-          <!-- Thumbnail Swiper -->
-        
+          <!-- Thumbnail Navigation -->
+          <div class="thumbnail-container" *ngIf="productImages.length > 1">
+            <div class="thumbnail-wrapper">
+              <div 
+                class="thumbnail-item" 
+                *ngFor="let image of productImages; let i = index"
+                [class.active]="i === currentImageIndex"
+                (click)="changeImage(i)">
+                <img 
+                  [src]="image" 
+                  [alt]="'Thumbnail ' + (i + 1)"
+                  (error)="onThumbnailError($event)"
+                  class="thumbnail-image" />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -75,26 +96,20 @@
               </h3>
               
               <div class="info-grid">
-                <div class="info-item" *ngIf="product.category">
-                  <mat-chip class="info-chip">
-                    <mat-icon matChipAvatar>category</mat-icon>
-                    {{ product.category }}
-                  </mat-chip>
-                </div>
+                <mat-chip class="info-chip" *ngIf="product.category">
+                  <mat-icon matChipAvatar>category</mat-icon>
+                  {{ product.category }}
+                </mat-chip>
                 
-                <div class="info-item" *ngIf="product.year">
-                  <mat-chip class="info-chip">
-                    <mat-icon matChipAvatar>calendar_today</mat-icon>
-                    {{ product.year}}
-                  </mat-chip>
-                </div>
+                <mat-chip class="info-chip" *ngIf="product.year">
+                  <mat-icon matChipAvatar>calendar_today</mat-icon>
+                  {{ product.year}}
+                </mat-chip>
                 
-                <div class="info-item" *ngIf="product.cities">
-                  <mat-chip class="info-chip">
-                    <mat-icon matChipAvatar>location_on</mat-icon>
-                    {{ product.cities }}
-                  </mat-chip>
-                </div>
+                <mat-chip class="info-chip" *ngIf="product.cities">
+                  <mat-icon matChipAvatar>location_on</mat-icon>
+                  {{ product.cities }}
+                </mat-chip>
               </div>
             </div>
 
@@ -104,7 +119,7 @@
                 <mat-icon>description</mat-icon>
                 აღწერა
               </h3>
-              <p class="description-text">{{ product.description }}</p>
+              <div class="description-text">{{ product.description }}</div>
             </div>
 
             <!-- Seller Info -->
@@ -161,13 +176,43 @@
               mat-raised-button 
               color="accent"
               class="contact-button"
-              (click)="shareProduct()"
-             >
+              (click)="shareProduct()">
               <mat-icon>share</mat-icon>
               <span>გააზიარეთ</span>
             </button>
           </mat-card-actions>
         </mat-card>
+      </div>
+    </div>
+  </div>
+
+  <!-- Image Modal for Full Screen View -->
+  <div class="image-modal" *ngIf="showImageModal" (click)="closeImageModal()">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <button class="modal-close" (click)="closeImageModal()">
+        <mat-icon>close</mat-icon>
+      </button>
+      
+      <div class="modal-navigation" *ngIf="productImages.length > 1">
+        <button class="nav-button prev" (click)="prevModalImage()" [disabled]="currentModalIndex === 0">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <button class="nav-button next" (click)="nextModalImage()" [disabled]="currentModalIndex === productImages.length - 1">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </div>
+      
+      <div class="modal-image-container">
+        <img 
+          [src]="productImages[currentModalIndex]" 
+          [alt]="product?.title + ' - სურათი ' + (currentModalIndex + 1)"
+          class="modal-image"
+          (error)="onImageError($event)" />
+      </div>
+      
+      <div class="modal-indicator" *ngIf="productImages.length > 1">
+        {{ currentModalIndex + 1 }} / {{ productImages.length }}
       </div>
     </div>
   </div>
